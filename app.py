@@ -4,7 +4,7 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 import re
 
-NASDAQ_API_KEY = "D6LJq9S9oorAZ_YVgiQn"
+NASDAQ_API_KEY = "6XC-roD1G-yYTA668Uxy"
 
 def fetch_multpl(symbol):
     url = f"https://data.nasdaq.com/api/v3/datasets/MULTPL/{symbol}.json?api_key={NASDAQ_API_KEY}"
