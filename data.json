@@ -1,19 +1,31 @@
 {
   "CSI300": {
     "pe": null,
-    "error": "解析GuruFocus页面失败: 403 Client Error: Forbidden for url: https://www.gurufocus.com/economic_indicators/4569/pe-ratio-ttm-for-the-csi-300-index"
-  },
-  "Nasdaq": {
-    "pe": null,
-    "error": "获取 PCOMP_PE_RATIO_MONTH 数据失败: 403 Client Error: Forbidden for url: https://data.nasdaq.com/api/v3/datasets/MULTPL/PCOMP_PE_RATIO_MONTH.json?api_key=6XC-roD1G-yYTA668Uxy"
+    "price": 4523.711,
+    "year_high": 4528.1343,
+    "year_low": 3458.44,
+    "currency": "CNY"
   },
   "SP500": {
     "pe": null,
-    "error": "获取 SP500_PE_RATIO_MONTH 数据失败: 403 Client Error: Forbidden for url: https://data.nasdaq.com/api/v3/datasets/MULTPL/SP500_PE_RATIO_MONTH.json?api_key=6XC-roD1G-yYTA668Uxy"
+    "price": 6460.26,
+    "year_high": 6508.23,
+    "year_low": 4835.04,
+    "currency": "USD"
+  },
+  "Nasdaq": {
+    "pe": null,
+    "price": 21455.553,
+    "year_high": 21803.75,
+    "year_low": 14784.03,
+    "currency": "USD"
   },
   "HSI": {
     "pe": null,
-    "error": "解析GuruFocus页面失败: 403 Client Error: Forbidden for url: https://www.gurufocus.com/economic_indicators/5732/pe-ratio-ttm-for-the-hang-seng-index"
+    "price": 25617.42,
+    "year_high": 25918.86,
+    "year_low": 16964.28,
+    "currency": "HKD"
   },
-  "last_updated": "2025-09-01T12:58:38.614977"
+  "last_updated": "2025-09-01T13:08:00.776846"
 }
