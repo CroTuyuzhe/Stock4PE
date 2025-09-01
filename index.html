@@ -1,120 +1,101 @@
-<!doctype html>
-<html lang="zh-CN">
+<!DOCTYPE html>
+<html lang="zh">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>全球主要指数 · 10年PE（TTM）走势</title>
+  <meta charset="UTF-8">
+  <title>全球指数看板</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
   <style>
-    :root{ --bg:#0b1220; --card:#0f1724; --fg:#e6eef8; --muted:#98a2b3;}
-    *{box-sizing:border-box}
-    body{margin:0;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,"Helvetica Neue",Arial;background:var(--bg);color:var(--fg)}
-    header{padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.03)}
-    h1{margin:0;font-size:20px}
-    p.subtitle{margin:6px 0 0;color:var(--muted);font-size:13px}
-    main{padding:18px}
-    #chart{width:100%;height:68vh;max-height:780px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:8px;padding:12px}
-    .footer{padding:12px 24px;color:var(--muted);font-size:13px;border-top:1px solid rgba(255,255,255,0.02)}
-    .meta{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-    .badge{background:#0b2540;color:#8ec1ff;padding:6px 10px;border-radius:999px;font-weight:600;font-size:13px}
-    @media (max-width:640px){ #chart{height:56vh} header{padding:12px} main{padding:12px} }
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .card {
+      background: #fff;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .price {
+      font-size: 1.5em;
+      font-weight: bold;
+    }
+    .high { color: green; }
+    .low { color: red; }
+    #last-updated {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 0.9em;
+      color: #555;
+    }
   </style>
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
 </head>
 <body>
-  <header>
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div>
-        <h1>全球主要指数 · 10年 PE（TTM）走势</h1>
-        <p class="subtitle">指数：沪深300 (CSI 300) · 纳斯达克综合 (Nasdaq Composite) · 标普500 (S&P 500) · 恒生指数 (HSI)</p>
-      </div>
-      <div class="meta">
-        <div class="badge">自动更新：每日 北京时间 15:00（数据端）</div>
-        <div id="last-update" style="color:var(--muted);font-size:13px">上次更新：--</div>
-      </div>
-    </div>
-  </header>
-
-  <main>
-    <div id="chart"></div>
-  </main>
-
-  <div class="footer" id="footer">
-    数据来源：请在 <code>app.py</code> 中配置 API 接口，例如 Nasdaq DataLink 等。<br/>
-    更新频率：每个交易日北京时间 15:00 自动更新（GitHub Actions）。
+  <h2>🌍 全球指数看板</h2>
+  <div class="grid">
+    <div class="card" id="CSI300"></div>
+    <div class="card" id="SP500"></div>
+    <div class="card" id="Nasdaq"></div>
+    <div class="card" id="HSI"></div>
   </div>
+  <div id="last-updated"></div>
 
-<script>
-(function(){
-  const el = document.getElementById('chart');
-  const chart = echarts.init(el, null, {renderer:'canvas', useDirtyRect: true});
-  const intervalMilliseconds = 60 * 1000; // 每分钟刷新一次
+  <script>
+    async function loadData() {
+      try {
+        const response = await fetch("data.json?_t=" + Date.now()); // 防止缓存
+        const data = await response.json();
 
-  // 从 data.json 获取数据
-  async function fetchJSON(url){
-    try {
-      const res = await fetch(url + "?v=" + Date.now(), {cache: "no-store"});
-      if(!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.json();
-    } catch (e) {
-      console.warn("fetchJSON error", url, e);
-      return {};
+        const indices = ["CSI300", "SP500", "Nasdaq", "HSI"];
+
+        indices.forEach(id => {
+          const div = document.getElementById(id);
+          const info = data[id];
+          div.innerHTML = `
+            <h3>${id}</h3>
+            <div class="price">${info.price.toFixed(2)} ${info.currency}</div>
+            <p>52周高点: <span class="high">${info.year_high}</span></p>
+            <p>52周低点: <span class="low">${info.year_low}</span></p>
+            <div id="chart-${id}" style="width:100%;height:200px;"></div>
+          `;
+
+          // 简单展示高低区间
+          const chart = echarts.init(document.getElementById("chart-" + id));
+          chart.setOption({
+            xAxis: {
+              type: "category",
+              data: ["低点", "当前", "高点"]
+            },
+            yAxis: { type: "value" },
+            series: [{
+              data: [info.year_low, info.price, info.year_high],
+              type: "line",
+              smooth: true,
+              areaStyle: {}
+            }]
+          });
+        });
+
+        document.getElementById("last-updated").innerText = 
+          "⏰ 数据更新时间: " + data.last_updated;
+
+      } catch (err) {
+        console.error("加载数据失败:", err);
+      }
     }
-  }
 
-  async function render(){
-    const data = await fetchJSON("data.json");
-
-    // 假设 data.json 结构类似：
-    // {
-    //   "csi300": {"date": "2025-09-01", "value": 14.23},
-    //   "nasdaq": {"date": "2025-09-01", "value": 28.76},
-    //   "sp500": {"date": "2025-09-01", "value": 19.34},
-    //   "hsi": {"date": "2025-09-01", "value": 11.05},
-    //   "last_updated": "2025-09-01T07:00:00Z"
-    // }
-
-    const option = {
-      backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg') || '#0b1220',
-      textStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--fg') || '#e6eef8'},
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: {type: 'shadow'}
-      },
-      xAxis: {
-        type: 'category',
-        data: ["沪深300", "纳斯达克", "标普500", "恒生指数"],
-        axisLabel: { color: '#cbd5e1' }
-      },
-      yAxis: {
-        type: 'value',
-        name: 'PE（TTM）',
-        axisLine: { show: false },
-        splitLine: { show: true }
-      },
-      series: [{
-        name: '最新PE',
-        type: 'bar',
-        data: [
-          data.csi300?.value ?? null,
-          data.nasdaq?.value ?? null,
-          data.sp500?.value ?? null,
-          data.hsi?.value ?? null
-        ],
-        itemStyle: { borderRadius: [6, 6, 0, 0] }
-      }]
-    };
-
-    chart.setOption(option, {notMerge:true});
-
-    // 更新时间显示
-    const lastUpdate = data.last_updated ? new Date(data.last_updated).toLocaleString("zh-CN", {timeZone: "Asia/Shanghai"}) : "暂无数据";
-    document.getElementById('last-update').textContent = "上次更新：" + lastUpdate;
-  }
-
-  render();
-  setInterval(render, intervalMilliseconds);
-  window.addEventListener('resize', () => chart.resize());
-})();
-</script>
+    loadData();
+    setInterval(loadData, 60000); // 每分钟刷新
+  </script>
 </body>
 </html>
