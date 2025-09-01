@@ -1,32 +1,26 @@
-name: Update Data
+name: Update PE Data
 
 on:
   schedule:
-    - cron: "0 0 * * *"   # 每天 0点 UTC 执行 (北京时间早上8点)
-  workflow_dispatch:      # 支持手动运行
+    - cron: '0 7 * * 1-5'  # 每个交易日 UTC 07:00 = 北京时间 15:00
+  workflow_dispatch:
 
 jobs:
   update-data:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
-      - name: Set up Python
+      - uses: actions/checkout@v3
+      - name: Setup Python
         uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-
-      - name: Install dependencies
-        run: pip install requests
-
-      - name: Run script
+        with: {python-version: '3.11'}
+      - name: Install deps
+        run: pip install requests beautifulsoup4
+      - name: Fetch PE & write data.json
         run: python app.py
-
-      - name: Commit updated data.json
+      - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data.json
-          git commit -m "Update data.json [skip ci]" || echo "No changes to commit"
+          git commit -m "Update PE data [skip ci]" || echo "No changes"
           git push
