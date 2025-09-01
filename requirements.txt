@@ -3,9 +3,10 @@ pandas>=2.2.2
 requests>=2.32.0
 plotly>=5.23.0
 tenacity>=8.2.3
+yfinance>=0.2.18
+beautifulsoup4>=4.11.0
 
 streamlit
 plotly
-pandas
 akshare
 yfinance
