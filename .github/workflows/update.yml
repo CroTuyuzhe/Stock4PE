@@ -7,22 +7,37 @@ on:
 
 jobs:
   update-data:
+    # 授予 GITHUB_TOKEN 写入权限
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}  # 关键修改在这里！
+          # 使用具有写入权限的令牌
+          token: ${{ secrets.PAT_TOKEN }}
+          
       - name: Setup Python
         uses: actions/setup-python@v4
-        with: {python-version: '3.11'}
-      - name: Install deps
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
         run: pip install requests beautifulsoup4
-      - name: Fetch PE & write data.json
+        
+      - name: Fetch PE data and generate data.json
         run: python app.py
-      - name: Commit and push
+        
+      - name: Commit and push changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data.json
-          git commit -m "Update PE data [skip ci]" || echo "No changes"
-          git push
+          # 检查是否有更改需要提交
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update PE data [skip ci]"
+            git push origin HEAD:main
+          fi
