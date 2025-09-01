@@ -7,9 +7,6 @@ on:
 
 jobs:
   update-data:
-    # 授予 GITHUB_TOKEN 写入权限
-    permissions:
-      contents: write
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -24,7 +21,7 @@ jobs:
           python-version: '3.11'
           
       - name: Install dependencies
-        run: pip install requests beautifulsoup4
+        run: pip install yfinance pandas requests beautifulsoup4  # 添加 yfinance 和 pandas
         
       - name: Fetch PE data and generate data.json
         run: python app.py
@@ -34,7 +31,6 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data.json
-          # 检查是否有更改需要提交
           if git diff --staged --quiet; then
             echo "No changes to commit"
           else
