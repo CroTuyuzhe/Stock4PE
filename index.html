@@ -39,150 +39,80 @@
   </main>
 
   <div class="footer" id="footer">
-    数据来源：请在后端 `data/` 文件中放置 CSV 文件（SP500.csv、CSI300.csv、HSI.csv、NASDAQ.csv）。 |
-    更新频率：每个交易日北京时间 15:00 自动更新（数据端）。若你需要把来源写成可点链接，请在仓库 README/底注替换。
+    数据来源：请在 <code>app.py</code> 中配置 API 接口，例如 Nasdaq DataLink 等。<br/>
+    更新频率：每个交易日北京时间 15:00 自动更新（GitHub Actions）。
   </div>
 
 <script>
 (function(){
-  // 配置：数据文件名（位于 /data/ 目录）
-  const sources = [
-    {key: "SP500", label: "标普500 (S&P 500)", file: "/data/SP500.csv"},
-    {key: "CSI300", label: "沪深300 (CSI 300)", file: "/data/CSI300.csv"},
-    {key: "HSI", label: "恒生指数 (HSI)", file: "/data/HSI.csv"},
-    {key: "NASDAQ", label: "纳斯达克综合 (Nasdaq Composite)", file: "/data/NASDAQ.csv"}
-  ];
-
-  // 重绘间隔（毫秒），页面会每 intervalMilliseconds 拉一次 CSV 并刷新图表
-  const intervalMilliseconds = 60 * 1000; // 60s
-
-  // ECharts 实例
   const el = document.getElementById('chart');
   const chart = echarts.init(el, null, {renderer:'canvas', useDirtyRect: true});
+  const intervalMilliseconds = 60 * 1000; // 每分钟刷新一次
 
-  // Utility: fetch CSV -> [{date, pe}]
-  async function fetchCSV(url){
+  // 从 data.json 获取数据
+  async function fetchJSON(url){
     try {
       const res = await fetch(url + "?v=" + Date.now(), {cache: "no-store"});
       if(!res.ok) throw new Error(`HTTP ${res.status}`);
-      const txt = await res.text();
-      const lines = txt.trim().split(/\r?\n/).filter(Boolean);
-      if(lines.length <= 1) return [];
-      const head = lines[0].split(',');
-      const dateIdx = head.findIndex(h => /date/i.test(h));
-      const peIdx = head.findIndex(h => /pe/i.test(h));
-      if(dateIdx < 0 || peIdx < 0){
-        // fallback: assume first two columns
-        return lines.slice(1).map(r => {
-          const cs = r.split(',');
-          return {date: cs[0], pe: parseFloat(cs[1])};
-        }).filter(x => !isNaN(x.pe));
-      }
-      return lines.slice(1).map(r => {
-        const cs = r.split(',');
-        return {date: cs[dateIdx], pe: parseFloat(cs[peIdx])};
-      }).filter(x => !isNaN(x.pe));
+      return await res.json();
     } catch (e) {
-      console.warn("fetchCSV error", url, e);
-      return [];
+      console.warn("fetchJSON error", url, e);
+      return {};
     }
   }
 
-  // Load all sources and build unified date axis
-  async function loadAll(){
-    const results = {};
-    for(const s of sources){
-      results[s.key] = await fetchCSV(s.file);
-    }
-    // build master sorted date list (string) from 10 years window
-    // keep as YYYY-MM-DD or ISO string; ECharts category axis uses them as strings
-    const dateSet = new Set();
-    Object.values(results).forEach(arr => arr.forEach(r => dateSet.add(r.date)));
-    const dates = Array.from(dateSet).sort((a,b) => new Date(a) - new Date(b));
-    // trim to last 10 years
-    const tenYearsAgo = new Date();
-    tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10);
-    const filteredDates = dates.filter(d => new Date(d) >= tenYearsAgo);
-    // Build series data aligned to filteredDates
-    const series = sources.map(s => {
-      const map = new Map(results[s.key].map(r => [r.date, r.pe]));
-      const data = filteredDates.map(d => (map.has(d) ? (isFinite(map.get(d))? map.get(d): null) : null ));
-      return {name: s.label, data};
-    });
-    return {dates: filteredDates, series};
-  }
-
-  // Render
   async function render(){
-    const payload = await loadAll();
+    const data = await fetchJSON("data.json");
+
+    // 假设 data.json 结构类似：
+    // {
+    //   "csi300": {"date": "2025-09-01", "value": 14.23},
+    //   "nasdaq": {"date": "2025-09-01", "value": 28.76},
+    //   "sp500": {"date": "2025-09-01", "value": 19.34},
+    //   "hsi": {"date": "2025-09-01", "value": 11.05},
+    //   "last_updated": "2025-09-01T07:00:00Z"
+    // }
+
     const option = {
       backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--bg') || '#0b1220',
       textStyle: { color: getComputedStyle(document.documentElement).getPropertyValue('--fg') || '#e6eef8'},
       tooltip: {
         trigger: 'axis',
-        axisPointer: {type: 'cross'},
-        formatter: function(params){
-          // params is array for each series, show date + values
-          if(!params || !params.length) return '';
-          let s = `<div style="font-weight:700">${params[0].axisValue}</div>`;
-          params.forEach(p => {
-            const v = (p.value==null || isNaN(p.value))? '—' : p.value.toFixed(2);
-            s += `<div style="margin-top:4px"><span style="display:inline-block;width:10px;height:10px;background:${p.color};margin-right:8px;border-radius:2px"></span>${p.seriesName}: <b>${v}</b></div>`;
-          });
-          return s;
-        }
+        axisPointer: {type: 'shadow'}
       },
-      legend: { top: 12, textStyle: {color: '#cbd5e1'} },
-      grid: { left: 50, right: 30, top: 60, bottom: 60 },
       xAxis: {
         type: 'category',
-        data: payload.dates,
-        boundaryGap: false,
-        axisLabel: { formatter: v => v.slice(0,10) }
+        data: ["沪深300", "纳斯达克", "标普500", "恒生指数"],
+        axisLabel: { color: '#cbd5e1' }
       },
       yAxis: {
         type: 'value',
         name: 'PE（TTM）',
-        nameLocation: 'middle',
-        nameGap: 40,
         axisLine: { show: false },
         splitLine: { show: true }
       },
-      series: payload.series.map((s, idx) => ({
-        name: s.name,
-        type: 'line',
-        showSymbol: false,
-        sampling: 'lttb',
-        smooth: false,
-        data: s.data,
-        connectNulls: false,
-        lineStyle: { width: 2 },
-        emphasis: { focus: 'series' }
-      }))
+      series: [{
+        name: '最新PE',
+        type: 'bar',
+        data: [
+          data.csi300?.value ?? null,
+          data.nasdaq?.value ?? null,
+          data.sp500?.value ?? null,
+          data.hsi?.value ?? null
+        ],
+        itemStyle: { borderRadius: [6, 6, 0, 0] }
+      }]
     };
-    chart.setOption(option, {notMerge: true});
-    // update status (last-modified via /status)
-    try {
-      const st = await fetch('/status?v=' + Date.now()).then(r=>r.json());
-      const files = st.files || {};
-      const times = Object.keys(files).map(k => files[k].last_modified_utc || '').filter(Boolean);
-      if(times.length) {
-        document.getElementById('last-update').textContent = '上次数据更新时间（UTC）: ' + times.join(' | ');
-      } else {
-        document.getElementById('last-update').textContent = '上次更新：暂无数据';
-      }
-    } catch (e) {
-      // ignore
-    }
+
+    chart.setOption(option, {notMerge:true});
+
+    // 更新时间显示
+    const lastUpdate = data.last_updated ? new Date(data.last_updated).toLocaleString("zh-CN", {timeZone: "Asia/Shanghai"}) : "暂无数据";
+    document.getElementById('last-update').textContent = "上次更新：" + lastUpdate;
   }
 
-  // initial render
   render();
-
-  // periodic refresh
   setInterval(render, intervalMilliseconds);
-
-  // responsive
   window.addEventListener('resize', () => chart.resize());
 })();
 </script>
