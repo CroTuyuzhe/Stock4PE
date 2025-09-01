@@ -1,1 +1,19 @@
-
+{
+  "CSI300": {
+    "pe": null,
+    "error": "403 Client Error: Forbidden for url: https://www.gurufocus.com/economic_indicators/4569/pe-ratio-ttm-for-the-csi-300-index"
+  },
+  "Nasdaq": {
+    "pe": null,
+    "error": "403 Client Error: Forbidden for url: https://data.nasdaq.com/api/v3/datasets/MULTPL/PCOMP_PE_RATIO_MONTH.json?api_key=D6LJq9S9oorAZ_YVgiQn"
+  },
+  "SP500": {
+    "pe": null,
+    "error": "403 Client Error: Forbidden for url: https://data.nasdaq.com/api/v3/datasets/MULTPL/SP500_PE_RATIO_MONTH.json?api_key=D6LJq9S9oorAZ_YVgiQn"
+  },
+  "HSI": {
+    "pe": null,
+    "error": "403 Client Error: Forbidden for url: https://www.gurufocus.com/economic_indicators/5732/pe-ratio-ttm-for-the-hang-seng-index"
+  },
+  "last_updated": "2025-09-01T12:49:47.347785"
+}
