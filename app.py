@@ -1,59 +1,52 @@
-import yfinance as yf
-from dash import Dash, dcc, html
-from dash.dependencies import Input, Output
-import plotly.graph_objs as go
+from flask import Flask, jsonify
+import requests
+import os
 
-# 定义要跟踪的指数
-indices = {
-    "沪深300": "000300.SS",   # 沪深300指数
-    "纳斯达克综合": "^IXIC",   # 纳斯达克综合指数
-    "标普500": "^GSPC",       # 标普500指数
-    "恒生指数": "^HSI"         # 恒生指数
-}
+app = Flask(__name__)
 
-# 初始化 Dash 应用
-app = Dash(__name__)
-server = app.server  # 部署需要
+# 你的 Nasdaq DataLink API key
+NASDAQ_API_KEY = "D6LJq9S9oorAZ_YVgiQn"
 
-app.layout = html.Div([
-    html.H1("📊 全球主要股指实时看板", style={'textAlign': 'center'}),
+# ==============================
+# 数据获取函数
+# ==============================
+def get_index_pe():
+    data = {}
 
-    dcc.Interval(
-        id='interval-component',
-        interval=60*1000,  # 每60秒刷新一次
-        n_intervals=0
-    ),
+    # ✅ 沪深300（占位符，需换成你可用的API）
+    data["csi300"] = {"name": "沪深300", "pe": None}  # TODO: Replace with actual API
 
-    dcc.Graph(id='live-update-graph'),
+    # ✅ 纳斯达克综合指数
+    try:
+        url = f"https://data.nasdaq.com/api/v3/datasets/MULTPL/PCOMP_PE_RATIO_MONTH.json?api_key={NASDAQ_API_KEY}"
+        res = requests.get(url)
+        js = res.json()
+        value = js["dataset"]["data"][0][1]
+        data["nasdaq"] = {"name": "纳斯达克综合", "pe": value}
+    except Exception as e:
+        data["nasdaq"] = {"name": "纳斯达克综合", "pe": None, "error": str(e)}
 
-])
+    # ✅ 标普500
+    try:
+        url = f"https://data.nasdaq.com/api/v3/datasets/MULTPL/SP500_PE_RATIO_MONTH.json?api_key={NASDAQ_API_KEY}"
+        res = requests.get(url)
+        js = res.json()
+        value = js["dataset"]["data"][0][1]
+        data["sp500"] = {"name": "标普500", "pe": value}
+    except Exception as e:
+        data["sp500"] = {"name": "标普500", "pe": None, "error": str(e)}
 
-@app.callback(
-    Output('live-update-graph', 'figure'),
-    [Input('interval-component', 'n_intervals')]
-)
-def update_graph(n):
-    traces = []
+    # ✅ 恒生指数（占位符，需换成你可用的API）
+    data["hsi"] = {"name": "恒生指数", "pe": None}  # TODO: Replace with actual API
 
-    for name, ticker in indices.items():
-        data = yf.download(ticker, period="5d", interval="30m")
-        traces.append(go.Scatter(
-            x=data.index,
-            y=data['Close'],
-            mode='lines',
-            name=name
-        ))
+    return data
 
-    figure = {
-        'data': traces,
-        'layout': go.Layout(
-            title="全球股指走势 (过去5天, 30分钟更新)",
-            xaxis=dict(title='时间'),
-            yaxis=dict(title='指数点位'),
-            hovermode='x unified'
-        )
-    }
-    return figure
+# ==============================
+# 路由
+# ==============================
+@app.route("/data")
+def data():
+    return jsonify(get_index_pe())
 
-if __name__ == '__main__':
-    app.run_server(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)
