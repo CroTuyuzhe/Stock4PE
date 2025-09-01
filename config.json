@@ -1,0 +1,33 @@
+{
+  "update_time_beijing": "15:00",
+  "indices": {
+    "SP500": {
+      "name": "S&P 500",
+      "loader": "sp500_from_nasdaq_datalink",
+      "datalink_dataset_daily": "MULTPL/SP500_PE_RATIO_DAILY",
+      "datalink_dataset_monthly": "MULTPL/SP500_PE_RATIO_MONTH",
+      "notes": "Requires free Nasdaq Data Link API key in NASDAQ_API_KEY"
+    },
+    "CSI300": {
+      "name": "CSI 300",
+      "loader": "csi300_from_csindex_via_akshare",
+      "csindex_code": "000300",
+      "notes": "Uses AkShare to pull CSIndex valuation table (市盈率TTM)"
+    },
+    "HSI": {
+      "name": "Hang Seng Index",
+      "loader": "hsi_from_hkex_or_gurufocus",
+      "notes": "Two strategies implemented: (1) HKEX/Hang Seng Indexes valuation JSON (if reachable); (2) GuruFocus economic indicator fallback (may require login)."
+    },
+    "NASDAQ": {
+      "name": "Nasdaq Composite",
+      "loader": "nasdaq_composite_from_gurufocus_or_proxy",
+      "notes": "Direct Composite TTM P/E feed is not freely & reliably available. Code uses GuruFocus (if available) or optional proxy feed you configure."
+    }
+  },
+  "output": {
+    "data_dir": "data",
+    "site_dir": "site",
+    "site_index": "index.html"
+  }
+}
