@@ -41,42 +41,39 @@
 
     main{
       display:grid;
-      grid-template-columns: 1fr 420px; /* 左大 右侧为币种概览列 */
+      grid-template-columns: 1fr; /* 默认单列布局 */
       gap: 20px;
-      padding: 20px 28px;
+      padding: 20px;
       justify-content: center;
+      max-width: 1400px;
+      margin: 0 auto;
     }
 
     /* 卡片区域 */
     #cards {
       display: grid;
-      grid-template-columns: repeat(2, minmax(500px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
       gap: 20px;
-      justify-content: center;
       width: 100%;
-      max-width: 1300px;
-      margin: 0 auto;
     }
 
     /* 卡片容器 */
     .card {
       display: flex;
+      flex-direction: column;
       gap: 16px;
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
       border: 1px solid rgba(255,255,255,0.03);
       border-radius: 10px;
       padding: 16px;
-      align-items: stretch;
       min-height: 160px;
-      min-width: 500px;   /* 保证内容区和图表都能放下 */
-      overflow: hidden;   /* 防止内容溢出 */
+      width: 100%;
+      overflow: hidden;
     }
 
     /* 左侧信息区 */
     .card .left {
-      flex: 0 0 280px;    /* 固定宽度 */
-      min-width: 260px;
-      padding-right: 8px;
+      width: 100%;
       display:flex;
       flex-direction:column;
       justify-content:space-between;
@@ -114,8 +111,7 @@
 
     /* 图表区 */
     .chart { 
-      flex: 1; 
-      min-width: 200px; 
+      width: 100%; 
       height: 140px; 
     }
 
@@ -143,12 +139,54 @@
       text-align:center;
     }
 
-    @media (max-width: 1100px) {
-      main { grid-template-columns: 1fr; }
-      #cards { grid-template-columns: 1fr; }
-      .card { min-width: auto; }
-      .card .left { flex: 0 0 200px; min-width: 160px; }
-      .chart { height:140px; }
+    /* 中等屏幕布局 */
+    @media (min-width: 900px) {
+      main {
+        grid-template-columns: 1fr 320px;
+      }
+      
+      .card {
+        flex-direction: row;
+      }
+      
+      .card .left {
+        flex: 0 0 55%;
+        width: auto;
+        padding-right: 16px;
+      }
+    }
+
+    /* 大屏幕布局 */
+    @media (min-width: 1200px) {
+      main {
+        grid-template-columns: 1fr 420px;
+      }
+      
+      .card .left {
+        flex: 0 0 280px;
+      }
+    }
+
+    /* 小屏幕适配 */
+    @media (max-width: 600px) {
+      #cards {
+        grid-template-columns: 1fr;
+      }
+      
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 12px 16px;
+      }
+      
+      main {
+        padding: 16px;
+      }
+      
+      .card {
+        min-height: auto;
+      }
     }
   </style>
 </head>
