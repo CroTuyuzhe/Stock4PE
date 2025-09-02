@@ -1,31 +1,122 @@
 {
-  "CSI300": {
-    "pe": null,
-    "price": 4523.711,
-    "year_high": 4528.1343,
-    "year_low": 3458.44,
-    "currency": "CNY"
+  "沪深300": {
+    "pe_ttm": null,
+    "price": 4540.8105,
+    "change_percent": 0.37799717974908986,
+    "currency": "CNY",
+    "region": "中国"
   },
-  "SP500": {
-    "pe": null,
+  "标普500": {
+    "pe_ttm": null,
     "price": 6460.26,
-    "year_high": 6508.23,
-    "year_low": 4835.04,
-    "currency": "USD"
+    "change_percent": -0.6398169139292366,
+    "currency": "USD",
+    "region": "美国"
   },
-  "Nasdaq": {
-    "pe": null,
+  "纳斯达克": {
+    "pe_ttm": null,
     "price": 21455.553,
-    "year_high": 21803.75,
-    "year_low": 14784.03,
-    "currency": "USD"
+    "change_percent": -1.1501713875016164,
+    "currency": "USD",
+    "region": "美国"
   },
-  "HSI": {
-    "pe": null,
-    "price": 25617.42,
-    "year_high": 25918.86,
-    "year_low": 16964.28,
-    "currency": "HKD"
+  "道琼斯": {
+    "pe_ttm": null,
+    "price": 45544.88,
+    "change_percent": -0.20163508038452232,
+    "currency": "USD",
+    "region": "美国"
   },
-  "last_updated": "2025-09-01T13:08:00.776846"
+  "恒生指数": {
+    "pe_ttm": null,
+    "price": 25603.31,
+    "change_percent": -0.05507970748028859,
+    "currency": "HKD",
+    "region": "香港"
+  },
+  "日经225": {
+    "pe_ttm": null,
+    "price": 42396.87,
+    "change_percent": 0.49321158535241644,
+    "currency": "JPY",
+    "region": "日本"
+  },
+  "台湾加权": {
+    "pe_ttm": null,
+    "price": 24205.61,
+    "change_percent": 0.5561710770268735,
+    "currency": "TWD",
+    "region": "台湾"
+  },
+  "韩国KOSPI": {
+    "pe_ttm": null,
+    "price": 3164.45,
+    "change_percent": 0.6847113998720933,
+    "currency": "KRW",
+    "region": "韩国"
+  },
+  "印度SENSEX": {
+    "pe_ttm": null,
+    "price": 80364.49,
+    "change_percent": 0.6952041513776982,
+    "currency": "INR",
+    "region": "印度"
+  },
+  "德国DAX": {
+    "pe_ttm": null,
+    "price": 24037.33,
+    "change_percent": 0.5653033757129681,
+    "currency": "EUR",
+    "region": "欧洲"
+  },
+  "英国富时100": {
+    "pe_ttm": null,
+    "price": 9196.34,
+    "change_percent": 0.0979608896590308,
+    "currency": "GBP",
+    "region": "欧洲"
+  },
+  "法国CAC40": {
+    "pe_ttm": null,
+    "price": 7707.9,
+    "change_percent": 0.05192175391684731,
+    "currency": "EUR",
+    "region": "欧洲"
+  },
+  "欧洲斯托克50": {
+    "pe_ttm": null,
+    "price": 5367.08,
+    "change_percent": 0.2868231394334237,
+    "currency": "EUR",
+    "region": "欧洲"
+  },
+  "澳大利亚ASX200": {
+    "pe_ttm": null,
+    "price": 8922.9,
+    "change_percent": -0.053765247488167064,
+    "currency": "AUD",
+    "region": "澳大利亚"
+  },
+  "巴西IBOVESPA": {
+    "pe_ttm": null,
+    "price": 141283.02,
+    "change_percent": -0.09846398307706418,
+    "currency": "BRL",
+    "region": "拉丁美洲"
+  },
+  "俄罗斯MOEX": {
+    "pe_ttm": null,
+    "price": 2222.51,
+    "change_percent": -0.18592953540070836,
+    "currency": "RUB",
+    "region": "俄罗斯"
+  },
+  "越南胡志明": {
+    "pe_ttm": null,
+    "price": null,
+    "change_percent": null,
+    "currency": "USD",
+    "region": "东南亚"
+  },
+  "last_updated": "2025-09-02T02:05:33.448439"
 }
