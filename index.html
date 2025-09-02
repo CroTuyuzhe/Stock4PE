@@ -14,6 +14,8 @@
       --accent: #4a90e2;
       --up: #ff4d4f;   /* 涨 - 红 */
       --down: #29a329; /* 跌 - 绿 */
+      --tag-bg: #1c2536;
+      --tag-text: #4a90e2;
     }
     *{box-sizing:border-box}
     body{
@@ -41,12 +43,7 @@
       padding: 20px 28px;
     }
 
-    /* 左侧索引列表（竖向卡片） */
-    #cards {
-      display:flex;
-      flex-direction:column;
-      gap:14px;
-    }
+    #cards { display:flex; flex-direction:column; gap:14px; }
     .card {
       display:flex;
       gap:16px;
@@ -74,25 +71,25 @@
       font-weight:700;
       letter-spacing:0.2px;
     }
-    .change {
-      font-weight:700;
-      font-size:13px;
-    }
+    .change { font-weight:700; font-size:13px; }
     .up { color: var(--up); }
     .down { color: var(--down); }
     .meta { color: var(--muted); font-size:13px; margin-top:6px; }
     .price { font-size:20px; font-weight:800; margin-top:8px; }
     .range { font-size:13px; color: var(--muted); margin-top:8px; }
     .volume { font-size:12px; color: var(--muted); margin-top:6px; }
-
-    /* 右侧每张小图 */
-    .chart {
-      flex:1;
-      min-width:160px;
-      height:120px;
+    .tag {
+      display:inline-block;
+      padding:2px 8px;
+      margin-top:6px;
+      font-size:12px;
+      border-radius:6px;
+      background: var(--tag-bg);
+      color: var(--tag-text);
     }
 
-    /* 右栏：币种概览 */
+    .chart { flex:1; min-width:160px; height:120px; }
+
     #currency-panel {
       display:flex;
       flex-direction:column;
@@ -131,50 +128,31 @@
   </header>
 
   <main>
-    <section id="cards" aria-label="指数列表">
-      <!-- 动态卡片插入 -->
-    </section>
-
-    <aside id="currency-panel" aria-label="按币种概览">
-      <!-- 币种概览卡片插入 -->
-    </aside>
+    <section id="cards" aria-label="指数列表"></section>
+    <aside id="currency-panel" aria-label="按币种概览"></aside>
   </main>
 
   <footer>
-    数据来源：由后端生成的 <code>data.json</code>（请确保与本页面在同一目录）。页面会每 60 秒请求一次 data.json 以刷新显示。
+    数据来源：由后端生成的 <code>data.json</code>。页面每 60 秒自动刷新。
   </footer>
 
 <script>
 (async function(){
-  // Helper 格式化器
   const fmtPrice = (v) => (v==null || isNaN(v)) ? "—" : Number(v).toFixed(2);
-  const fmtPct = (v) => {
-    if (v == null || isNaN(v)) return "—";
-    const pct = Number(v) * 100;
-    const sign = pct > 0 ? "+" : "";
-    return sign + pct.toFixed(2) + "%";
-  };
-  const fmtNum = (v) => {
-    if (v == null || isNaN(v)) return "—";
-    return new Intl.NumberFormat().format(Number(v));
-  };
+  const fmtPct = (v) => (v==null || isNaN(v)) ? "—" : (v>=0? "+" : "") + v.toFixed(2) + "%";
+  const fmtNum = (v) => (v==null || isNaN(v)) ? "—" : new Intl.NumberFormat().format(Number(v));
 
-  // 保持图表对象，以便下次刷新时 dispose
-  let cardCharts = [];         // per-index small charts
-  let currencyCharts = {};     // per-currency chart instances
+  let cardCharts = [], currencyCharts = {};
 
-  // 强制规则：恒生->中国香港；台湾加权->中国台湾
   function normalizeRegion(name, regionField){
     if (/恒生|HSI/i.test(name)) return "中国香港";
     if (/台湾|TWII|Taiwan/i.test(name)) return "中国台湾";
     return regionField || "未知";
   }
 
-  // 将 key 转为 DOM safe id
   function idFor(key){ return "id_" + key.replace(/\s+/g, "_").replace(/[^\w\-]/g, "_"); }
 
   async function loadAndRender(){
-    // 清理之前的图表（避免内存泄露）
     cardCharts.forEach(ch => { try { ch.dispose(); } catch(e){} });
     cardCharts = [];
     Object.values(currencyCharts).forEach(ch => { try { ch.dispose(); } catch(e){} });
@@ -182,229 +160,87 @@
 
     let data;
     try {
-      const res = await fetch("data.json?ts=" + Date.now(), {cache: "no-store"});
-      if (!res.ok) throw new Error("HTTP " + res.status);
+      const res = await fetch("data.json?ts=" + Date.now(), {cache:"no-store"});
       data = await res.json();
     } catch (err) {
-      console.error("读取 data.json 失败：", err);
-      document.getElementById("cards").innerHTML = "<div style='color:#ffb3b3;padding:12px'>⚠️ 无法读取 data.json，请检查文件路径与 GitHub Pages 上的文件位置。</div>";
-      document.getElementById("currency-panel").innerHTML = "";
-      document.getElementById("last-updated").textContent = "⏰ 更新：读取失败";
+      console.error("读取失败", err);
       return;
     }
 
-    // 更新时间显示（转换为北京时间）
-    const lu = data.last_updated || data.lastUpdated || null;
+    const lu = data.last_updated || data.lastUpdated;
     if (lu) {
-      try {
-        const dt = new Date(lu);
-        const sh = dt.toLocaleString("zh-CN", {timeZone: "Asia/Shanghai"});
-        document.getElementById("last-updated").textContent = "⏰ 更新：" + sh;
-      } catch (e) {
-        document.getElementById("last-updated").textContent = "⏰ 更新：" + lu;
-      }
-    } else {
-      document.getElementById("last-updated").textContent = "⏰ 更新：未知";
+      const dt = new Date(lu);
+      document.getElementById("last-updated").textContent = "⏰ 更新：" + dt.toLocaleString("zh-CN",{timeZone:"Asia/Shanghai"});
     }
 
-    // 筛选出指数键（排除 last_updated）
-    const keys = Object.keys(data).filter(k => k !== "last_updated" && k !== "lastUpdated");
-    // 按字母/自然顺序稳定排序（可按需改）
-    keys.sort((a,b) => a.localeCompare(b, 'zh-Hans-CN'));
-
-    // 构建按币种分组的数据结构
-    const byCurrency = {};
-    keys.forEach(k => {
-      const it = data[k];
-      const cur = it?.currency || "UNK";
-      if (!byCurrency[cur]) byCurrency[cur] = [];
-      byCurrency[cur].push({ key: k, info: it });
+    let keys = Object.keys(data).filter(k=>!["last_updated","lastUpdated"].includes(k));
+    keys.sort((a,b)=>{
+      const pa = (data[a].currency==="CNY"||data[a].currency==="HKD")?0:1;
+      const pb = (data[b].currency==="CNY"||data[b].currency==="HKD")?0:1;
+      if(pa!==pb) return pa-pb;
+      return a.localeCompare(b,'zh-Hans-CN');
     });
 
-    // 渲染左侧卡片（每个index 左 info 右小图）
     const cardsEl = document.getElementById("cards");
-    cardsEl.innerHTML = ""; // reset
+    cardsEl.innerHTML = "";
 
-    for (const k of keys) {
-      const it = data[k] || {};
-      const name = k;
-      const region = normalizeRegion(k, it.region);
-      const price = it.current_price ?? it.price ?? null;
-      const high = it.fifty_two_week_high ?? it.year_high ?? null;
-      const low = it.fifty_two_week_low ?? it.year_low ?? null;
-      const chg = it.change_percent ?? it.change ?? null;
-      const vol = it.volume ?? null;
-      const cur = it.currency ?? "—";
+    for(const k of keys){
+      const it = data[k]||{};
+      const region = normalizeRegion(k,it.region);
+      const price = it.current_price??null;
+      const prev = it.previous_close??null;
+      const chg = it.change_percent??null;
+      const high = it.fifty_two_week_high??null;
+      const low = it.fifty_two_week_low??null;
+      const vol = it.volume??null;
+      const cur = it.currency??"—";
 
-      // create card node
-      const card = document.createElement("div");
-      card.className = "card";
+      const card=document.createElement("div"); card.className="card";
+      const left=document.createElement("div"); left.className="left";
 
-      const left = document.createElement("div");
-      left.className = "left";
+      const headerDiv=document.createElement("div"); headerDiv.className="index-title";
+      const nameDiv=document.createElement("div"); nameDiv.className="index-name"; nameDiv.innerText=k;
+      const changeDiv=document.createElement("div"); changeDiv.className="change"; changeDiv.innerText=fmtPct(chg);
+      changeDiv.classList.add((chg!=null && chg>=0)?"up":"down");
+      headerDiv.appendChild(nameDiv); headerDiv.appendChild(changeDiv);
 
-      // Header with name + change
-      const headerDiv = document.createElement("div");
-      headerDiv.className = "index-title";
+      const priceDiv=document.createElement("div"); priceDiv.className="price"; priceDiv.innerText=(price==null?"—":fmtPrice(price)+" "+cur);
 
-      const nameDiv = document.createElement("div");
-      nameDiv.className = "index-name";
-      nameDiv.innerText = name;
+      const prevDiv=document.createElement("div"); prevDiv.className="meta"; prevDiv.innerText="前收盘："+(prev==null?"—":fmtPrice(prev));
 
-      const changeDiv = document.createElement("div");
-      changeDiv.className = "change";
-      const chText = fmtPct(chg);
-      changeDiv.innerText = chText;
-      changeDiv.classList.add((typeof chg === "number" && chg >= 0) ? "up" : "down");
+      const rangeDiv=document.createElement("div"); rangeDiv.className="range"; rangeDiv.innerText=`52 周：${fmtPrice(low)} — ${fmtPrice(high)}`;
 
-      headerDiv.appendChild(nameDiv);
-      headerDiv.appendChild(changeDiv);
+      const metaDiv=document.createElement("div"); metaDiv.className="meta"; metaDiv.innerHTML=`地区：${region} • 成交量：${fmtNum(vol)}`;
 
-      // price + meta
-      const priceDiv = document.createElement("div");
-      priceDiv.className = "price";
-      priceDiv.innerText = (price==null)? "—" : fmtPrice(price) + " " + cur;
-
-      const metaDiv = document.createElement("div");
-      metaDiv.className = "meta";
-      metaDiv.innerHTML = `地区：${region} &nbsp; • &nbsp; 成交量：${fmtNum(vol)}`;
-
-      const rangeDiv = document.createElement("div");
-      rangeDiv.className = "range";
-      rangeDiv.innerText = `52 周：${(low==null?"—":fmtPrice(low))}  —  ${(high==null?"—":fmtPrice(high))}`;
-
-      const peDiv = document.createElement("div");
-      peDiv.className = "meta";
-      peDiv.style.marginTop = "6px";
-      peDiv.innerText = `PE：${(it.pe==null? "暂无数据" : Number(it.pe).toFixed(2))}`;
+      const quality=document.createElement("span"); quality.className="tag"; quality.innerText=it.data_quality||"未知";
 
       left.appendChild(headerDiv);
       left.appendChild(priceDiv);
-      left.appendChild(peDiv);
+      left.appendChild(prevDiv);
       left.appendChild(rangeDiv);
       left.appendChild(metaDiv);
+      left.appendChild(quality);
 
-      // right chart div
-      const chartDiv = document.createElement("div");
-      chartDiv.className = "chart";
-      chartDiv.id = idFor(name);
+      const chartDiv=document.createElement("div"); chartDiv.className="chart"; chartDiv.id=idFor(k);
+      card.appendChild(left); card.appendChild(chartDiv); cardsEl.appendChild(card);
 
-      // append
-      card.appendChild(left);
-      card.appendChild(chartDiv);
-      cardsEl.appendChild(card);
-
-      // draw small chart if we have numeric data
-      if ((price !== null && !isNaN(price)) && (low !== null && !isNaN(low)) && (high !== null && !isNaN(high))) {
-        const ch = echarts.init(chartDiv);
-        const seriesData = [
-          { name: '52w低', value: Number(low) },
-          { name: '现价', value: Number(price) },
-          { name: '52w高', value: Number(high) }
-        ];
+      if(price!=null && low!=null && high!=null){
+        const ch=echarts.init(chartDiv);
         ch.setOption({
-          grid: { left: 8, right: 8, top: 8, bottom: 18 },
-          xAxis: {
-            type: 'category',
-            data: ['低点','当前','高点'],
-            axisLabel: { color: '#cbd5e1', fontSize: 12 },
-            axisLine: { lineStyle: { color: 'rgba(200,200,200,0.08)' } },
-            axisTick: { show: false }
-          },
-          yAxis: {
-            type: 'value',
-            axisLabel: { color: '#cbd5e1', fontSize: 12 },
-            splitLine: { lineStyle: { color: 'rgba(255,255,255,0.03)' } }
-          },
-          tooltip: {
-            trigger: 'axis',
-            formatter: function(params){
-              if(!params || !params.length) return "";
-              return params.map(p => `${p.axisValue}<br/>${p.seriesName}: ${Number(p.value).toFixed(2)} ${cur}`).join("<br/>");
-            }
-          },
-          series: [{
-            type: 'line',
-            data: seriesData.map(d=>d.value),
-            symbol: 'circle',
-            symbolSize: 8,
-            lineStyle: { width: 2, color: 'rgba(74,144,226,0.95)' },
-            itemStyle: { color: 'rgba(74,144,226,0.95)' },
-            areaStyle: { color: 'rgba(74,144,226,0.12)' }
-          }]
+          grid:{left:8,right:8,top:8,bottom:18},
+          xAxis:{type:'category',data:['低点','当前','高点'],axisLabel:{color:'#cbd5e1',fontSize:12}},
+          yAxis:{type:'value',axisLabel:{color:'#cbd5e1',fontSize:12},splitLine:{lineStyle:{color:'rgba(255,255,255,0.03)'}}},
+          series:[{type:'line',data:[low,price,high],symbol:'circle',symbolSize:6,lineStyle:{color:varColor()},itemStyle:{color:varColor()},areaStyle:{color:'rgba(74,144,226,0.12)'}}]
         });
         cardCharts.push(ch);
-      } else {
-        chartDiv.style.display = 'flex';
-        chartDiv.style.alignItems = 'center';
-        chartDiv.style.justifyContent = 'center';
-        chartDiv.innerHTML = `<div style="color:${'var(--muted)'}">暂无区间数据</div>`;
-      }
-    } // end for keys
-
-    // 渲染右侧按币种的汇总小图（每个币种显示该币种下所有指数的三点序列）
-    const currencyPanel = document.getElementById("currency-panel");
-    currencyPanel.innerHTML = "";
-    for (const cur of Object.keys(byCurrency = byCurrency || (function(){ let tmp={}; Object.keys(data).forEach(k=>{ if(k!=='last_updated' && k!=='lastUpdated'){ const it=data[k]; const c=it?.currency||'UNK'; if(!tmp[c]) tmp[c]=[]; tmp[c].push({key:k, info:it}); } }); return tmp; })())) {
-      const arr = byCurrency[cur];
-      const cCard = document.createElement("div");
-      cCard.className = "currency-card";
-      cCard.innerHTML = `<div class="currency-title">${cur} — 指数对比</div><div id="currency-chart-${cur}" class="currency-chart"></div>`;
-      currencyPanel.appendChild(cCard);
-
-      // prepare series: for each index in this currency, create series [low, current, high]
-      const categories = ['低点','当前','高点'];
-      const seriesArr = [];
-      arr.forEach(obj => {
-        const k = obj.key;
-        const it = obj.info;
-        const low = it.fifty_two_week_low ?? it.year_low ?? null;
-        const high = it.fifty_two_week_high ?? it.year_high ?? null;
-        const price = it.current_price ?? it.price ?? null;
-        if (low==null || high==null || price==null) return; // skip incomplete
-        seriesArr.push({
-          name: k,
-          type: 'line',
-          stack: undefined,
-          smooth: false,
-          data: [Number(low), Number(price), Number(high)],
-          symbol: 'circle',
-          symbolSize: 6
-        });
-      });
-
-      const el = document.getElementById(`currency-chart-${cur}`);
-      if (seriesArr.length===0) {
-        el.innerHTML = `<div style="color:var(--muted);padding:12px">暂无可绘制的数据</div>`;
-      } else {
-        const ch = echarts.init(el);
-        ch.setOption({
-          grid: { left: 28, right: 12, top: 16, bottom: 18 },
-          legend: { show: true, textStyle: { color: 'var(--muted)' }, orient: 'horizontal', bottom: 0 },
-          xAxis: { type:'category', data: categories, axisLine: { lineStyle: { color: 'rgba(255,255,255,0.06)' } }, axisLabel: { color: 'var(--muted)' } },
-          yAxis: { type:'value', axisLabel: { color: 'var(--muted)' }, splitLine: { lineStyle: { color: 'rgba(255,255,255,0.03)' } } },
-          tooltip: { trigger: 'axis', axisPointer: { type: 'cross' } },
-          series: seriesArr
-        });
-        currencyCharts[cur] = ch;
       }
     }
 
-    // ensure charts resize on window resize
-    setTimeout(()=>{ window.dispatchEvent(new Event('resize')); }, 200);
-  } // end loadAndRender
+    function varColor(){return 'rgba(74,144,226,0.95)';}
+  }
 
-  // initial render + periodic refresh
   await loadAndRender();
-  setInterval(loadAndRender, 60 * 1000);
-
-  // resize handling
-  window.addEventListener('resize', () => {
-    cardCharts.forEach(ch => { try { ch.resize(); } catch(e){} });
-    Object.values(currencyCharts).forEach(ch => { try { ch.resize(); } catch(e){} });
-  });
-
-  
+  setInterval(loadAndRender,60000);
 })();
 </script>
 </body>
