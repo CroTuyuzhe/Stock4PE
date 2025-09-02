@@ -1,160 +1,127 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>全球指数看板</title>
+  <title>全球主要指数监控</title>
   <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #1e1e2f;
-      color: #e0e0e0;
+      font-family: "Microsoft YaHei", sans-serif;
+      background-color: #f5f7fa;
       margin: 0;
       padding: 20px;
+      color: #333;
     }
-    header {
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .container {
       display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 20px;
-    }
-    h2 {
-      margin: 0;
-      color: #ffffff;
-    }
-    #last-updated {
-      font-size: 0.9em;
-      color: #bbbbbb;
-    }
-    .section {
-      margin-bottom: 40px;
-    }
-    .section h3 {
-      border-left: 5px solid #4cafef;
-      padding-left: 10px;
-      margin-bottom: 15px;
-      color: #ffffff;
+      flex-direction: column;
+      gap: 20px;
+      max-width: 1200px;
+      margin: auto;
     }
     .card {
-      background: #2a2a40;
-      border-radius: 10px;
-      padding: 15px;
-      margin-bottom: 15px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-    }
-    .index-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
     }
-    .index-name {
-      font-size: 1.2em;
-      font-weight: bold;
+    .info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-right: 20px;
     }
-    .change {
-      font-size: 1em;
-      font-weight: bold;
+    .info h2 {
+      margin: 0;
+      font-size: 20px;
     }
-    .up {
-      color: #ff4d4f;
-    }
-    .down {
-      color: #29a329;
-    }
-    .price {
-      font-size: 1.4em;
-      margin: 8px 0;
-    }
-    .range {
-      font-size: 0.9em;
-      color: #bbbbbb;
+    .info p {
+      margin: 6px 0;
+      font-size: 14px;
     }
     .chart {
-      width: 100%;
+      flex: 2;
       height: 200px;
-      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <header>
-    <h2>🌍 全球指数看板</h2>
-    <div id="last-updated"></div>
-  </header>
-
-  <div id="content"></div>
+  <h1>📊 全球主要指数监控</h1>
+  <div class="container" id="dashboard"></div>
 
   <script>
     async function loadData() {
-      try {
-        const response = await fetch("data.json?_t=" + Date.now()); // 防缓存
-        const data = await response.json();
-        const lastUpdated = data["last_updated"];
-        document.getElementById("last-updated").innerText = "⏰ 更新时间: " + lastUpdated;
+      const res = await fetch("data.json"); // 读取本地生成的 JSON
+      const data = await res.json();
+      const container = document.getElementById("dashboard");
+      container.innerHTML = "";
 
-        // 按 currency 分组
-        const groups = {};
-        Object.keys(data).forEach(key => {
-          if (key === "last_updated") return;
-          const info = data[key];
-          if (!groups[info.currency]) groups[info.currency] = [];
-          groups[info.currency].push({ name: key, ...info });
+      const regionMap = {
+        "CSI300": "中国大陆",
+        "SP500": "美国",
+        "Nasdaq": "美国",
+        "HSI": "中国香港",
+        "TWII": "中国台湾"
+      };
+
+      Object.entries(data).forEach(([key, val]) => {
+        if (key === "last_updated") return;
+
+        // 卡片元素
+        const card = document.createElement("div");
+        card.className = "card";
+
+        // 左侧信息
+        const info = document.createElement("div");
+        info.className = "info";
+        info.innerHTML = `
+          <h2>${key}</h2>
+          <p>地区：${regionMap[key] || "未知"}</p>
+          <p>现价：${val.price} ${val.currency}</p>
+          <p>PE：${val.pe ?? "暂无数据"}</p>
+          <p>52周区间：${val.year_low} ~ ${val.year_high}</p>
+        `;
+
+        // 右侧图表
+        const chartDiv = document.createElement("div");
+        chartDiv.className = "chart";
+        chartDiv.id = "chart-" + key;
+
+        card.appendChild(info);
+        card.appendChild(chartDiv);
+        container.appendChild(card);
+
+        // ECharts 绘制
+        const chart = echarts.init(chartDiv);
+        chart.setOption({
+          tooltip: { trigger: "axis" },
+          xAxis: {
+            type: "category",
+            data: ["52周低点", "现价", "52周高点"],
+          },
+          yAxis: { type: "value" },
+          series: [
+            {
+              name: key,
+              type: "line",
+              smooth: true,
+              data: [val.year_low, val.price, val.year_high],
+              lineStyle: { color: "#5470c6" },
+              itemStyle: { color: "#91cc75" }
+            }
+          ]
         });
-
-        // 渲染
-        const content = document.getElementById("content");
-        content.innerHTML = "";
-        for (const currency in groups) {
-          const section = document.createElement("div");
-          section.className = "section";
-          section.innerHTML = `<h3>${currency}</h3>`;
-          groups[currency].forEach(info => {
-            const card = document.createElement("div");
-            card.className = "card";
-
-            const changeClass = info.change_percent >= 0 ? "up" : "down";
-            const changeText = (info.change_percent * 100).toFixed(2) + "%";
-
-            card.innerHTML = `
-              <div class="index-header">
-                <div class="index-name">${info.name || info.region || ""} ${info.name ? "" : ""}${info.name || ""}${info.region ? "" : ""}${Object.keys(data).find(k=>data[k]===info)}</div>
-                <div class="change ${changeClass}">${changeText}</div>
-              </div>
-              <div class="price">${info.current_price.toFixed(2)} ${info.currency}</div>
-              <div class="range">52周高: ${info.fifty_two_week_high ? info.fifty_two_week_high.toFixed(2) : "-"} | 52周低: ${info.fifty_two_week_low ? info.fifty_two_week_low.toFixed(2) : "-"}</div>
-              <div id="chart-${info.currency}-${info.current_price}" class="chart"></div>
-            `;
-
-            section.appendChild(card);
-
-            // ECharts
-            const chart = echarts.init(card.querySelector(".chart"));
-            chart.setOption({
-              backgroundColor: "#2a2a40",
-              xAxis: { type: "category", data: ["低点", "当前", "高点"], axisLine: { lineStyle: { color: "#ccc" } } },
-              yAxis: { type: "value", axisLine: { lineStyle: { color: "#ccc" } } },
-              series: [{
-                data: [
-                  info.fifty_two_week_low,
-                  info.current_price,
-                  info.fifty_two_week_high
-                ],
-                type: "line",
-                smooth: true,
-                areaStyle: { opacity: 0.3 }
-              }],
-              textStyle: { color: "#e0e0e0" }
-            });
-          });
-          content.appendChild(section);
-        }
-      } catch (err) {
-        console.error("加载数据失败:", err);
-      }
+      });
     }
 
     loadData();
-    setInterval(loadData, 60000); // 每分钟刷新
   </script>
 </body>
 </html>
