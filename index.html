@@ -135,7 +135,7 @@
 <body>
   <header>
     <h1>全球主要指数 · 实时监控（含 52 周区间）</h1>
-    <div id="last-updated">⏰ 更新：--</div>
+    <div id="last-updated">⏰ 最近数据更新（纽约时间）：--</div>
   </header>
 
   <main>
@@ -190,7 +190,7 @@
     const lu = data.last_updated || data.lastUpdated;
     if (lu) {
       const dt = new Date(lu);
-      document.getElementById("last-updated").textContent = "⏰ 更新：" + dt.toLocaleString("zh-CN",{timeZone:"Asia/Shanghai"});
+      document.getElementById("last-updated").textContent = "⏰ 最近数据更新（纽约时间）：" + dt.toLocaleString("zh-CN",{timeZone:"Asia/Shanghai"});
     }
 
     let keys = Object.keys(data).filter(k=>!["last_updated","lastUpdated"].includes(k));
