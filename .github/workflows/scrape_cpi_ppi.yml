@@ -1,4 +1,4 @@
-name: Update PE Data
+name: Update Scrape_cpi_ppi.
 
 on:
   schedule:
