@@ -12,8 +12,8 @@
       --muted: #98a2b3;
       --text: #e6eef8;
       --accent: #4a90e2;
-      --up: #ff4d4f;   /* 涨 - 红 */
-      --down: #29a329; /* 跌 - 绿 */
+      --up: #ff4d4f;
+      --down: #29a329;
       --tag-bg: #1c2536;
       --tag-text: #4a90e2;
       --tag-good: #29a329;
@@ -41,41 +41,38 @@
 
     main{
       display:grid;
-      grid-template-columns: 1fr; /* 默认单列布局 */
+      grid-template-columns: 1fr;
       gap: 20px;
       padding: 20px 28px;
     }
 
-    /* 宽屏幕下的布局 - 两列 */
     @media (min-width: 1200px) {
       main {
-        grid-template-columns: 1fr 420px; /* 左大 右侧为币种概览列 */
+        grid-template-columns: 1fr 420px;
       }
     }
 
     #cards { 
       display:grid;
-      grid-template-columns: 1fr; /* 默认单列 */
+      grid-template-columns: 1fr;
       gap: 14px;
     }
 
-    /* 中等屏幕以上 - 两列卡片 */
     @media (min-width: 900px) {
       #cards {
-        grid-template-columns: repeat(2, 1fr); /* 两列布局 */
+        grid-template-columns: repeat(2, 1fr);
       }
     }
 
-    /* 超大屏幕 - 三列卡片 */
     @media (min-width: 1600px) {
       #cards {
-        grid-template-columns: repeat(3, 1fr); /* 三列布局 */
+        grid-template-columns: repeat(3, 1fr);
       }
     }
 
     .card {
       display:flex;
-      flex-direction: column; /* 默认垂直排列 */
+      flex-direction: column;
       gap:16px;
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
       border: 1px solid rgba(255,255,255,0.03);
@@ -84,21 +81,26 @@
       min-height: 160px;
     }
 
-    /* 中等屏幕以上 - 卡片内部水平排列 */
+    /* 中等屏幕以上 - 水平布局，左侧固定宽度，右侧自适应 */
     @media (min-width: 768px) {
       .card {
-        flex-direction: row; /* 水平排列 */
+        flex-direction: row;
+        gap: 20px;
+      }
+      .card .left {
+        flex: 0 0 50%;
+        min-width: 240px;
+        display:flex;
+        flex-direction: column;
+        justify-content:space-between;
+      }
+      .card .chart-container {
+        flex: 1;
+        min-width: 180px;
       }
     }
 
-    .card .left {
-      flex: 1;
-      min-width: 0; /* 防止内容溢出 */
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-    }
-    .index-title {
+    .card .left .index-title {
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -108,16 +110,15 @@
       font-size:16px;
       font-weight:700;
       letter-spacing:0.2px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      white-space: normal;
+      overflow-wrap: break-word;
     }
     .change { font-weight:700; font-size:13px; }
     .up { color: var(--up); }
     .down { color: var(--down); }
-    .meta { color: var(--muted); font-size:13px; margin-top:4px; }
-    .price { font-size:20px; font-weight:800; margin-top:8px; }
-    .range { font-size:13px; color: var(--muted); margin-top:8px; }
+    .meta { color: var(--muted); font-size:13px; margin-top:4px; white-space: normal; overflow-wrap: break-word; }
+    .price { font-size:20px; font-weight:800; margin-top:8px; word-break: break-word; }
+    .range { font-size:13px; color: var(--muted); margin-top:8px; white-space: normal; overflow-wrap: break-word; }
     .volume { font-size:12px; color: var(--muted); margin-top:4px; }
     .tag {
       display:inline-block;
@@ -172,29 +173,21 @@
         align-items: flex-start;
         gap: 10px;
       }
-      
       main {
         padding: 15px;
       }
-      
       .card .left {
         width: 100%;
       }
-      
-      .index-name {
-        font-size: 14px;
-      }
-      
-      .price {
-        font-size: 18px;
-      }
+      .index-name { font-size: 14px; }
+      .price { font-size: 18px; }
     }
   </style>
 </head>
 <body>
   <header>
     <h1>全球主要指数 · 实时监控（含 52 周区间）</h1>
-    <div id="last-updated">⏰ 最近更新（伦敦时间）：--</div>
+    <div id="last-updated">⏰ 更新：--</div>
   </header>
 
   <main>
@@ -203,7 +196,7 @@
   </main>
 
   <footer>
-    数据来源：由后端生成的 <code>Powered By Eric</code>。页面每 60 秒自动刷新。
+    数据来源：由后端生成的 <code>data.json</code>。页面每 60 秒自动刷新。
   </footer>
 
 <script>
@@ -233,22 +226,11 @@
 
   function createChartOptions(low, price, high, cur) {
     return {
-      grid: {
-        left: '3%',
-        right: '3%',
-        top: '10%',
-        bottom: '20%',
-        containLabel: true
-      },
+      grid: { left: '3%', right: '3%', top: '10%', bottom: '20%', containLabel: true },
       xAxis: {
         type: 'category',
         data: ['52周低点', '当前价格', '52周高点'],
-        axisLabel: {
-          color: '#cbd5e1',
-          fontSize: 11,
-          interval: 0,
-          rotate: 0,
-          margin: 8,
+        axisLabel: { color: '#cbd5e1', fontSize: 11, interval: 0, rotate: 0, margin: 8,
           formatter: function(value) {
             if (value === '当前价格') return '当前';
             if (value === '52周低点') return '低点';
@@ -256,46 +238,23 @@
             return value;
           }
         },
-        axisTick: {
-          show: false
-        },
-        axisLine: {
-          lineStyle: {
-            color: 'rgba(255,255,255,0.1)'
-          }
-        }
+        axisTick: { show: false },
+        axisLine: { lineStyle: { color: 'rgba(255,255,255,0.1)' } }
       },
       yAxis: {
         type: 'value',
-        axisLabel: {
-          color: '#cbd5e1',
-          fontSize: 10,
-          inside: false
-        },
-        splitLine: {
-          lineStyle: {
-            color: 'rgba(255,255,255,0.03)'
-          }
-        },
-        min: function(value) {
-          return Math.max(0, value.min - value.min * 0.1);
-        }
+        axisLabel: { color: '#cbd5e1', fontSize: 10, inside: false },
+        splitLine: { lineStyle: { color: 'rgba(255,255,255,0.03)' } },
+        min: function(value) { return Math.max(0, value.min - value.min * 0.1); }
       },
       series: [{
         type: 'line',
         data: [low, price, high],
         symbol: 'circle',
         symbolSize: 8,
-        lineStyle: {
-          color: 'rgba(74,144,226,0.95)',
-          width: 2
-        },
-        itemStyle: {
-          color: 'rgba(74,144,226,0.95)'
-        },
-        areaStyle: {
-          color: 'rgba(74,144,226,0.12)'
-        },
+        lineStyle: { color: 'rgba(74,144,226,0.95)', width: 2 },
+        itemStyle: { color: 'rgba(74,144,226,0.95)' },
+        areaStyle: { color: 'rgba(74,144,226,0.12)' },
         tooltip: {
           trigger: 'item',
           formatter: function(params) {
@@ -309,10 +268,7 @@
         backgroundColor: 'rgba(15,23,36,0.95)',
         borderColor: 'rgba(74,144,226,0.5)',
         textStyle: { color: '#e6eef8' },
-        axisPointer: {
-          type: 'shadow',
-          shadowStyle: { color: 'rgba(74,144,226,0.1)' }
-        }
+        axisPointer: { type: 'shadow', shadowStyle: { color: 'rgba(74,144,226,0.1)' } }
       },
       animation: false
     };
@@ -336,7 +292,7 @@
     const lu = data.last_updated || data.lastUpdated;
     if (lu) {
       const dt = new Date(lu);
-      document.getElementById("last-updated").textContent = "⏰ 最近更新（伦敦时间）：" + dt.toLocaleString("zh-CN",{timeZone:"Asia/Shanghai"});
+      document.getElementById("last-updated").textContent = "⏰ 更新：" + dt.toLocaleString("zh-CN",{timeZone:"Asia/Shanghai"});
     }
 
     let keys = Object.keys(data).filter(k=>!["last_updated","lastUpdated"].includes(k));
@@ -373,16 +329,10 @@
       headerDiv.appendChild(nameDiv); headerDiv.appendChild(changeDiv);
 
       const priceDiv=document.createElement("div"); priceDiv.className="price"; priceDiv.innerText=(price==null?"—":fmtPrice(price)+" "+cur);
-
       const prevDiv=document.createElement("div"); prevDiv.className="meta"; prevDiv.innerText="前收盘："+(prev==null?"—":fmtPrice(prev));
-
       const rangeDiv=document.createElement("div"); rangeDiv.className="range"; rangeDiv.innerText=`52 周：${fmtPrice(low)} — ${fmtPrice(high)}`;
-
       const metaDiv=document.createElement("div"); metaDiv.className="meta"; metaDiv.innerHTML=`地区：${region} • 成交量：${fmtNum(vol)}`;
-
-      const quality=document.createElement("span"); 
-      quality.className=`tag ${qualityTag.class}`; 
-      quality.innerText=qualityTag.text;
+      const quality=document.createElement("span"); quality.className=`tag ${qualityTag.class}`; quality.innerText=qualityTag.text;
 
       left.appendChild(headerDiv);
       left.appendChild(priceDiv);
@@ -394,7 +344,7 @@
       const chartContainer=document.createElement("div"); chartContainer.className="chart-container";
       const chartDiv=document.createElement("div"); chartDiv.className="chart"; chartDiv.id=idFor(k);
       chartContainer.appendChild(chartDiv);
-      
+
       card.appendChild(left); card.appendChild(chartContainer); cardsEl.appendChild(card);
 
       if(price!=null && low!=null && high!=null){
@@ -405,19 +355,13 @@
       }
     }
 
-    // 延迟重绘以确保布局稳定
     setTimeout(() => {
-      cardCharts.forEach(chart => {
-        try { chart.resize(); } catch(e) {}
-      });
+      cardCharts.forEach(chart => { try { chart.resize(); } catch(e) {} });
     }, 100);
   }
 
-  // 添加窗口调整大小时的重绘
   window.addEventListener('resize', function() {
-    cardCharts.forEach(chart => {
-      try { chart.resize(); } catch(e) {}
-    });
+    cardCharts.forEach(chart => { try { chart.resize(); } catch(e) {} });
   });
 
   await loadAndRender();
