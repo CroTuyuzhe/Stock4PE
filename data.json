@@ -1,122 +1,165 @@
 {
   "沪深300": {
-    "pe_ttm": null,
-    "price": 4540.8105,
-    "change_percent": 0.37799717974908986,
+    "current_price": 4524.1797,
+    "fifty_two_week_high": 4548.8935546875,
+    "fifty_two_week_low": 3145.7900390625,
+    "change_percent": 0.010360962492949795,
+    "volume": 3720392604,
     "currency": "CNY",
     "region": "中国"
   },
+  "上证指数": {
+    "current_price": 3869.2693,
+    "fifty_two_week_high": 3888.597900390625,
+    "fifty_two_week_low": 2689.695068359375,
+    "change_percent": -0.16155723713179182,
+    "volume": 1439807020,
+    "currency": "CNY",
+    "region": "中国"
+  },
+  "深证成指": {
+    "current_price": 12738.591,
+    "fifty_two_week_high": 12857.1611328125,
+    "fifty_two_week_low": 7908.52001953125,
+    "change_percent": -0.7043521559672137,
+    "volume": 1520424503,
+    "currency": "CNY",
+    "region": "中国"
+  },
+  "恒生指数": {
+    "current_price": 25587.93,
+    "fifty_two_week_high": 25918.859375,
+    "fifty_two_week_low": 16964.279296875,
+    "change_percent": -0.11511697899319276,
+    "volume": 0,
+    "currency": "HKD",
+    "region": "香港"
+  },
   "标普500": {
-    "pe_ttm": null,
-    "price": 6460.26,
+    "current_price": 6460.26,
+    "fifty_two_week_high": 6508.22998046875,
+    "fifty_two_week_low": 4835.0400390625,
     "change_percent": -0.6398169139292366,
+    "volume": 2546179000,
     "currency": "USD",
     "region": "美国"
   },
   "纳斯达克": {
-    "pe_ttm": null,
-    "price": 21455.553,
+    "current_price": 21455.553,
+    "fifty_two_week_high": 21803.75,
+    "fifty_two_week_low": 14784.0302734375,
     "change_percent": -1.1501713875016164,
+    "volume": 6950924000,
     "currency": "USD",
     "region": "美国"
   },
   "道琼斯": {
-    "pe_ttm": null,
-    "price": 45544.88,
+    "current_price": 45544.88,
+    "fifty_two_week_high": 45757.83984375,
+    "fifty_two_week_low": 36611.78125,
     "change_percent": -0.20163508038452232,
+    "volume": 497403767,
     "currency": "USD",
     "region": "美国"
   },
-  "恒生指数": {
-    "pe_ttm": null,
-    "price": 25603.31,
-    "change_percent": -0.05507970748028859,
-    "currency": "HKD",
-    "region": "香港"
-  },
   "日经225": {
-    "pe_ttm": null,
-    "price": 42396.87,
-    "change_percent": 0.49321158535241644,
+    "current_price": 42313.69,
+    "fifty_two_week_high": 43876.421875,
+    "fifty_two_week_low": 30792.740234375,
+    "change_percent": 0.2960502067018311,
+    "volume": 0,
     "currency": "JPY",
     "region": "日本"
   },
   "台湾加权": {
-    "pe_ttm": null,
-    "price": 24205.61,
-    "change_percent": 0.5561710770268735,
+    "current_price": 24147.43,
+    "fifty_two_week_high": 24570.150390625,
+    "fifty_two_week_low": 17306.970703125,
+    "change_percent": 0.31447677420775627,
+    "volume": 0,
     "currency": "TWD",
     "region": "台湾"
   },
   "韩国KOSPI": {
-    "pe_ttm": null,
-    "price": 3164.45,
-    "change_percent": 0.6847113998720933,
+    "current_price": 3167.11,
+    "fifty_two_week_high": 3288.260009765625,
+    "fifty_two_week_low": 2284.719970703125,
+    "change_percent": 0.7693458015291557,
+    "volume": 143730,
     "currency": "KRW",
     "region": "韩国"
   },
   "印度SENSEX": {
-    "pe_ttm": null,
-    "price": 80364.49,
+    "current_price": 80364.49,
+    "fifty_two_week_high": 85978.25,
+    "fifty_two_week_low": 71425.0078125,
     "change_percent": 0.6952041513776982,
+    "volume": 0,
     "currency": "INR",
     "region": "印度"
   },
   "德国DAX": {
-    "pe_ttm": null,
-    "price": 24037.33,
+    "current_price": 24037.33,
+    "fifty_two_week_high": 24639.099609375,
+    "fifty_two_week_low": 18208.83984375,
     "change_percent": 0.5653033757129681,
+    "volume": 0,
     "currency": "EUR",
     "region": "欧洲"
   },
   "英国富时100": {
-    "pe_ttm": null,
-    "price": 9196.34,
+    "current_price": 9196.34,
+    "fifty_two_week_high": 9357.5,
+    "fifty_two_week_low": 7544.7998046875,
     "change_percent": 0.0979608896590308,
+    "volume": 0,
     "currency": "GBP",
     "region": "欧洲"
   },
   "法国CAC40": {
-    "pe_ttm": null,
-    "price": 7707.9,
+    "current_price": 7707.9,
+    "fifty_two_week_high": 8257.8798828125,
+    "fifty_two_week_low": 6763.759765625,
     "change_percent": 0.05192175391684731,
+    "volume": 0,
     "currency": "EUR",
     "region": "欧洲"
   },
   "欧洲斯托克50": {
-    "pe_ttm": null,
-    "price": 5367.08,
+    "current_price": 5367.08,
+    "fifty_two_week_high": 5568.18994140625,
+    "fifty_two_week_low": 4540.22021484375,
     "change_percent": 0.2868231394334237,
+    "volume": 0,
     "currency": "EUR",
     "region": "欧洲"
   },
   "澳大利亚ASX200": {
-    "pe_ttm": null,
-    "price": 8922.9,
-    "change_percent": -0.053765247488167064,
+    "current_price": 8918.4,
+    "fifty_two_week_high": 9054.5,
+    "fifty_two_week_low": 7169.2001953125,
+    "change_percent": -0.10417016700831223,
+    "volume": 0,
     "currency": "AUD",
     "region": "澳大利亚"
   },
   "巴西IBOVESPA": {
-    "pe_ttm": null,
-    "price": 141283.02,
+    "current_price": 141283.02,
+    "fifty_two_week_high": 142379.0,
+    "fifty_two_week_low": 118223.0,
     "change_percent": -0.09846398307706418,
+    "volume": 0,
     "currency": "BRL",
     "region": "拉丁美洲"
   },
   "俄罗斯MOEX": {
-    "pe_ttm": null,
-    "price": 2222.51,
+    "current_price": 2222.51,
+    "fifty_two_week_high": null,
+    "fifty_two_week_low": null,
     "change_percent": -0.18592953540070836,
+    "volume": 0,
     "currency": "RUB",
     "region": "俄罗斯"
   },
-  "越南胡志明": {
-    "pe_ttm": null,
-    "price": null,
-    "change_percent": null,
-    "currency": "USD",
-    "region": "东南亚"
-  },
-  "last_updated": "2025-09-02T02:05:33.448439"
+  "last_updated": "2025-09-02T02:14:04.731794"
 }
