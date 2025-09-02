@@ -8,9 +8,9 @@ def get_cpi_ppi_data():
     """爬取国家统计局的CPI和PPI数据并返回JSON格式数据"""
     try:
         # 国家统计局CPI数据页面
-        cpi_url = "https://data.stats.gov.cn/easyquery.htm?cn=A01&zb=A0101&sj=2024"
+        cpi_url = "https://data.stats.gov.cn/easyquery.htm?cn=A01&zb=A0101&sj=2025"
         # 国家统计局PPI数据页面
-        ppi_url = "https://data.stats.gov.cn/easyquery.htm?cn=A01&zb=A0102&sj=2024"
+        ppi_url = "https://data.stats.gov.cn/easyquery.htm?cn=A01&zb=A0102&sj=2025"
         
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
