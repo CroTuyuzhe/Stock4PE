@@ -367,10 +367,11 @@
             formatter: function(params) {
               const labels = ['52周低点', '当前价格', '52周高点'];
               let result = `<div style="font-weight:bold;margin-bottom:5px;">${k}</div>`;
-              params.forEach((item, index) => {
-                result += `<div>${labels[index]}: <span style="font-weight:bold;color:${item.color}">${fmtPrice(item.value)} ${cur}</span></div>`;
-              });
-              
+              return `${labels[params.dataIndex]}: ${fmtPrice(params.value)} ${cur}`;
+              };
+
+
+
               return result;
             },
             axisPointer: {
