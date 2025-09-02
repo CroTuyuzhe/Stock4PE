@@ -26,7 +26,7 @@ jobs:
           pip install yfinance pandas requests beautifulsoup4
           
       - name: Fetch PE data and generate goods.json  # 改为生成goods.json以保持一致性
-        run: python cpi_ppi_scraper.py  # 使用更新后的爬取脚本
+        run: python goods.py  # 使用更新后的爬取脚本
         
       - name: Commit and push changes
         run: |
