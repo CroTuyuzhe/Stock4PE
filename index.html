@@ -52,22 +52,11 @@
       }
     }
 
+    /* 卡片自适应宽度 */
     #cards { 
-      display:grid;
-      grid-template-columns: 1fr;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 14px;
-    }
-
-    @media (min-width: 900px) {
-      #cards {
-        grid-template-columns: repeat(2, 1fr);
-      }
-    }
-
-    @media (min-width: 1600px) {
-      #cards {
-        grid-template-columns: repeat(3, 1fr);
-      }
     }
 
     .card {
@@ -344,7 +333,7 @@
       const chartContainer=document.createElement("div"); chartContainer.className="chart-container";
       const chartDiv=document.createElement("div"); chartDiv.className="chart"; chartDiv.id=idFor(k);
       chartContainer.appendChild(chartDiv);
-
+      
       card.appendChild(left); card.appendChild(chartContainer); cardsEl.appendChild(card);
 
       if(price!=null && low!=null && high!=null){
