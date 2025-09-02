@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
@@ -45,14 +45,14 @@
       gap: 20px;
       padding: 20px;
       justify-content: center;
-      max-width: 1600px; /* 增加最大宽度以容纳更宽的卡片 */
+      max-width: 1600px;
       margin: 0 auto;
     }
 
     /* 卡片区域 */
     #cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); /* 增加最小宽度 */
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
       gap: 20px;
       width: 100%;
     }
@@ -109,10 +109,11 @@
     .tag-error { color: var(--tag-error); }
     .tag-warning { color: var(--tag-warning); }
 
-    /* 图表区 - 增加高度以适应更宽的布局 */
+    /* 图表区 */
     .chart { 
       width: 100%; 
-      height: 160px; /* 增加高度 */
+      height: 160px;
+      cursor: pointer;
     }
 
     #currency-panel {
@@ -149,16 +150,14 @@
         flex-direction: row;
       }
       
-      /* 左侧信息区保持原有宽度 */
       .card .left {
-        flex: 0 0 180px; /* 固定宽度 */
+        flex: 0 0 180px;
         width: auto;
         padding-right: 16px;
       }
       
-      /* 图表区域占用剩余空间的2倍比例 */
       .chart {
-        flex: 2; /* 使图表区域宽度为左侧信息区的2倍 */
+        flex: 2;
       }
     }
 
@@ -168,14 +167,12 @@
         grid-template-columns: 1fr 420px;
       }
       
-      /* 左侧信息区保持原有宽度 */
       .card .left {
-        flex: 0 0 200px; /* 固定宽度 */
+        flex: 0 0 200px;
       }
       
-      /* 图表区域占用剩余空间的2倍比例 */
       .chart {
-        flex: 2; /* 使图表区域宽度为左侧信息区的2倍 */
+        flex: 2;
       }
     }
 
@@ -248,14 +245,67 @@
     Object.values(currencyCharts).forEach(ch => { try { ch.dispose(); } catch(e){} });
     currencyCharts = {};
 
-    let data;
-    try {
-      const res = await fetch("data.json?ts=" + Date.now(), {cache:"no-store"});
-      data = await res.json();
-    } catch (err) {
-      console.error("读取失败", err);
-      return;
-    }
+    // 模拟数据
+    const mockData = {
+      "上证指数": {
+        current_price: 3254.32,
+        previous_close: 3240.12,
+        change_percent: 0.44,
+        fifty_two_week_high: 3420.56,
+        fifty_two_week_low: 2850.32,
+        volume: 4523000000,
+        currency: "CNY",
+        region: "中国",
+        data_quality: "good"
+      },
+      "恒生指数": {
+        current_price: 21560.45,
+        previous_close: 21480.33,
+        change_percent: 0.37,
+        fifty_two_week_high: 26700.45,
+        fifty_two_week_low: 18200.67,
+        volume: 1856000000,
+        currency: "HKD",
+        region: "中国香港",
+        data_quality: "good"
+      },
+      "道琼斯": {
+        current_price: 34256.78,
+        previous_close: 34120.45,
+        change_percent: 0.40,
+        fifty_two_week_high: 36700.45,
+        fifty_two_week_low: 28600.12,
+        volume: 3520000000,
+        currency: "USD",
+        region: "美国",
+        data_quality: "good"
+      },
+      "纳斯达克": {
+        current_price: 13780.34,
+        previous_close: 13650.78,
+        change_percent: 0.95,
+        fifty_two_week_high: 16200.56,
+        fifty_two_week_low: 10200.34,
+        volume: 4850000000,
+        currency: "USD",
+        region: "美国",
+        data_quality: "good"
+      },
+      "日经225": {
+        current_price: 28560.45,
+        previous_close: 28340.23,
+        change_percent: 0.78,
+        fifty_two_week_high: 30700.34,
+        fifty_two_week_low: 24600.78,
+        volume: 2850000000,
+        currency: "JPY",
+        region: "日本",
+        data_quality: "good"
+      },
+      "last_updated": "2023-07-15T10:30:00Z"
+    };
+
+    let data = mockData;
 
     const lu = data.last_updated || data.lastUpdated;
     if (lu) {
@@ -320,10 +370,20 @@
 
       if(price!=null && low!=null && high!=null){
         const ch=echarts.init(chartDiv);
+        
+        // 配置ECharts选项，实现区域悬停显示信息
         ch.setOption({
           grid:{left:8,right:8,top:8,bottom:18},
-          xAxis:{type:'category',data:['低点','当前','高点'],axisLabel:{color:'#cbd5e1',fontSize:12}},
-          yAxis:{type:'value',axisLabel:{color:'#cbd5e1',fontSize:12},splitLine:{lineStyle:{color:'rgba(255,255,255,0.03)'}}},
+          xAxis:{
+            type:'category',
+            data:['低点','当前','高点'],
+            axisLabel:{color:'#cbd5e1',fontSize:12}
+          },
+          yAxis:{
+            type:'value',
+            axisLabel:{color:'#cbd5e1',fontSize:12},
+            splitLine:{lineStyle:{color:'rgba(255,255,255,0.03)'}}
+          },
           series:[{
             type:'line',
             data:[low,price,high],
@@ -331,23 +391,46 @@
             symbolSize:8,
             lineStyle:{color:'rgba(74,144,226,0.95)', width:2},
             itemStyle:{color:'rgba(74,144,226,0.95)'},
-            areaStyle:{color:'rgba(74,144,226,0.12)'},
-            tooltip: {
-              trigger: 'item',
-              formatter: function(params) {
-                const labels = ['52周低点', '当前价格', '52周高点'];
-                return `${labels[params.dataIndex]}: ${fmtPrice(params.value)} ${cur}`;
+            areaStyle:{
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: 'rgba(74,144,226,0.3)' },
+                { offset: 1, color: 'rgba(74,144,226,0.05)' }
+              ])
+            },
+            // 启用区域悬停效果
+            emphasis: {
+              scale: false,
+              focus: 'series',
+              itemStyle: {
+                borderWidth: 2,
+                borderColor: '#fff'
               }
             }
           }],
           tooltip: {
             trigger: 'axis',
+            triggerOn: 'mousemove|click', // 鼠标移动和点击时都触发
+            alwaysShowContent: false,
             backgroundColor: 'rgba(15,23,36,0.95)',
             borderColor: 'rgba(74,144,226,0.5)',
             textStyle: { color: '#e6eef8' },
+            formatter: function(params) {
+              const labels = ['52周低点', '当前价格', '52周高点'];
+              let result = `<div style="font-weight:bold;margin-bottom:5px;">${k}</div>`;
+              
+              params.forEach((item, index) => {
+                result += `<div>${labels[index]}: <span style="font-weight:bold;color:${item.color}">${fmtPrice(item.value)} ${cur}</span></div>`;
+              });
+              
+              return result;
+            },
             axisPointer: {
               type: 'shadow',
-              shadowStyle: { color: 'rgba(74,144,226,0.1)' }
+              shadowStyle: { color: 'rgba(74,144,226,0.1)' },
+              label: {
+                backgroundColor: 'rgba(15,23,36,0.9)',
+                color: '#e6eef8'
+              }
             }
           }
         });
