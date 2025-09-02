@@ -1,370 +1,168 @@
-<!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>全球主要指数 · 实时监控</title>
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
-  <style>
-    :root{
-      --bg: #0b1220;
-      --card: #0f1724;
-      --muted: #98a2b3;
-      --text: #e6eef8;
-      --accent: #4a90e2;
-      --up: #ff4d4f;   /* 涨 - 红 */
-      --down: #29a329; /* 跌 - 绿 */
-      --tag-bg: #1c2536;
-      --tag-text: #4a90e2;
-      --tag-good: #29a329;
-      --tag-error: #ff4d4f;
-      --tag-warning: #ffa940;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family: -apple-system, "PingFang SC", "Microsoft Yahei", "Segoe UI", Roboto, Arial;
-      background: var(--bg);
-      color: var(--text);
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-    }
-    header{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:18px 28px;
-      border-bottom:1px solid rgba(255,255,255,0.04);
-    }
-    header h1{ margin:0; font-size:18px; font-weight:700; }
-    #last-updated { color: var(--muted); font-size:13px; }
-
-    main{
-      display:grid;
-      grid-template-columns: 1fr; /* 默认单列布局 */
-      gap: 20px;
-      padding: 20px;
-      justify-content: center;
-      max-width: 1600px; /* 增加最大宽度以容纳更宽的卡片 */
-      margin: 0 auto;
-    }
-
-    /* 卡片区域 */
-    #cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); /* 增加最小宽度 */
-      gap: 20px;
-      width: 100%;
-    }
-
-    /* 卡片容器 */
-    .card {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-      border: 1px solid rgba(255,255,255,0.03);
-      border-radius: 10px;
-      padding: 16px;
-      min-height: 160px;
-      width: 100%;
-      overflow: hidden;
-    }
-
-    /* 左侧信息区 */
-    .card .left {
-      width: 100%;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-    }
-
-    .index-title {
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      margin-bottom: 8px;
-    }
-    .index-name {
-      font-size:16px;
-      font-weight:700;
-      letter-spacing:0.2px;
-    }
-    .change { font-weight:700; font-size:13px; }
-    .up { color: var(--up); }
-    .down { color: var(--down); }
-    .meta { color: var(--muted); font-size:13px; margin-top:4px; }
-    .price { font-size:20px; font-weight:800; margin-top:8px; }
-    .range { font-size:13px; color: var(--muted); margin-top:8px; }
-    .volume { font-size:12px; color: var(--muted); margin-top:4px; }
-    .tag {
-      display:inline-block;
-      padding:4px 10px;
-      margin-top:8px;
-      font-size:12px;
-      border-radius:6px;
-      background: var(--tag-bg);
-    }
-    .tag-good { color: var(--tag-good); }
-    .tag-error { color: var(--tag-error); }
-    .tag-warning { color: var(--tag-warning); }
-
-    /* 图表区 - 增加高度以适应更宽的布局 */
-    .chart { 
-      width: 100%; 
-      height: 160px; /* 增加高度 */
-    }
-
-    #currency-panel {
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-      position:relative;
-    }
-    .currency-card {
-      background: var(--card);
-      border-radius:10px;
-      padding:10px;
-      border:1px solid rgba(255,255,255,0.03);
-      min-height:120px;
-    }
-    .currency-title { font-weight:700; font-size:14px; color:var(--text); margin-bottom:6px; }
-    .currency-chart { width:100%; height:160px; }
-
-    footer {
-      padding: 12px 28px;
-      color: var(--muted);
-      font-size:13px;
-      border-top: 1px solid rgba(255,255,255,0.03);
-      text-align:center;
-    }
-
-    /* 中等屏幕布局 */
-    @media (min-width: 900px) {
-      main {
-        grid-template-columns: 1fr 320px;
-      }
-      
-      .card {
-        flex-direction: row;
-      }
-      
-      /* 左侧信息区保持原有宽度 */
-      .card .left {
-        flex: 0 0 180px; /* 固定宽度 */
-        width: auto;
-        padding-right: 16px;
-      }
-      
-      /* 图表区域占用剩余空间的2倍比例 */
-      .chart {
-        flex: 2; /* 使图表区域宽度为左侧信息区的2倍 */
-      }
-    }
-
-    /* 大屏幕布局 */
-    @media (min-width: 1200px) {
-      main {
-        grid-template-columns: 1fr 420px;
-      }
-      
-      /* 左侧信息区保持原有宽度 */
-      .card .left {
-        flex: 0 0 200px; /* 固定宽度 */
-      }
-      
-      /* 图表区域占用剩余空间的2倍比例 */
-      .chart {
-        flex: 2; /* 使图表区域宽度为左侧信息区的2倍 */
-      }
-    }
-
-    /* 小屏幕适配 */
-    @media (max-width: 600px) {
-      #cards {
-        grid-template-columns: 1fr;
-      }
-      
-      header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-        padding: 12px 16px;
-      }
-      
-      main {
-        padding: 16px;
-      }
-      
-      .card {
-        min-height: auto;
-      }
-    }
-  </style>
-</head>
-<body>
-  <header>
-    <h1>全球主要指数 · 实时监控（含 52 周区间）</h1>
-    <div id="last-updated">⏰ 最近数据更新（伦敦时间）：--</div>
-  </header>
-
-  <main>
-    <section id="cards" aria-label="指数列表"></section>
-    <aside id="currency-panel" aria-label="按币种概览"></aside>
-  </main>
-
-  <footer>
-    数据来源：由后端生成的 <code>Powered By Eric</code>。页面每 60 秒自动刷新。
-  </footer>
-
-<script>
-(async function(){
-  const fmtPrice = (v) => (v==null || isNaN(v)) ? "—" : Number(v).toFixed(2);
-  const fmtPct = (v) => (v==null || isNaN(v)) ? "—" : (v>=0? "+" : "") + v.toFixed(2) + "%";
-  const fmtNum = (v) => (v==null || isNaN(v)) ? "—" : new Intl.NumberFormat().format(Number(v));
-
-  let cardCharts = [], currencyCharts = {};
-
-  function normalizeRegion(name, regionField){
-    if (/恒生|HSI/i.test(name)) return "中国香港";
-    if (/台湾|TWII|Taiwan/i.test(name)) return "中国台湾";
-    return regionField || "未知";
-  }
-
-  function getQualityTag(dataQuality) {
-    switch(dataQuality) {
-      case 'good': return { text: '校验数据质量：优秀', class: 'tag-good' };
-      case 'error': return { text: '校验数据质量：错误', class: 'tag-error' };
-      case 'warning': return { text: '校验数据质量：警告', class: 'tag-warning' };
-      default: return { text: '校验数据质量：未知', class: '' };
-    }
-  }
-
-  function idFor(key){ return "id_" + key.replace(/\s+/g, "_").replace(/[^\w\-]/g, "_"); }
-
-  async function loadAndRender(){
-    cardCharts.forEach(ch => { try { ch.dispose(); } catch(e){} });
-    cardCharts = [];
-    Object.values(currencyCharts).forEach(ch => { try { ch.dispose(); } catch(e){} });
-    currencyCharts = {};
-
-    let data;
-    try {
-      const res = await fetch("data.json?ts=" + Date.now(), {cache:"no-store"});
-      data = await res.json();
-    } catch (err) {
-      console.error("读取失败", err);
-      return;
-    }
-
-    const lu = data.last_updated || data.lastUpdated;
-    if (lu) {
-      const dt = new Date(lu);
-      document.getElementById("last-updated").textContent = "⏰ 最近数据更新（伦敦时间）：" + dt.toLocaleString("zh-CN",{timeZone:"Asia/Shanghai"});
-    }
-
-    let keys = Object.keys(data).filter(k=>!["last_updated","lastUpdated"].includes(k));
-    keys.sort((a,b)=>{
-      const pa = (data[a].currency==="CNY"||data[a].currency==="HKD")?0:1;
-      const pb = (data[b].currency==="CNY"||data[b].currency==="HKD")?0:1;
-      if(pa!==pb) return pa-pb;
-      return a.localeCompare(b,'zh-Hans-CN');
-    });
-
-    const cardsEl = document.getElementById("cards");
-    cardsEl.innerHTML = "";
-
-    for(const k of keys){
-      const it = data[k]||{};
-      const region = normalizeRegion(k,it.region);
-      const price = it.current_price??null;
-      const prev = it.previous_close??null;
-      const chg = it.change_percent??null;
-      const high = it.fifty_two_week_high??null;
-      const low = it.fifty_two_week_low??null;
-      const vol = it.volume??null;
-      const cur = it.currency??"—";
-      const dataQuality = it.data_quality || "unknown";
-      const qualityTag = getQualityTag(dataQuality);
-
-      const card=document.createElement("div"); card.className="card";
-      const left=document.createElement("div"); left.className="left";
-
-      const headerDiv=document.createElement("div"); headerDiv.className="index-title";
-      const nameDiv=document.createElement("div"); nameDiv.className="index-name"; nameDiv.innerText=k;
-      const changeDiv=document.createElement("div"); changeDiv.className="change"; changeDiv.innerText=fmtPct(chg);
-      changeDiv.classList.add((chg!=null && chg>=0)?"up":"down");
-      headerDiv.appendChild(nameDiv); headerDiv.appendChild(changeDiv);
-
-      const priceDiv=document.createElement("div"); priceDiv.className="price"; priceDiv.innerText=(price==null?"—":fmtPrice(price)+" "+cur);
-
-      const prevDiv=document.createElement("div"); prevDiv.className="meta"; prevDiv.innerText="前收盘："+(prev==null?"—":fmtPrice(prev));
-
-      const rangeDiv=document.createElement("div"); rangeDiv.className="range"; rangeDiv.innerText=`52 周：${fmtPrice(low)} — ${fmtPrice(high)}`;
-
-      const metaDiv=document.createElement("div"); metaDiv.className="meta"; metaDiv.innerHTML=`地区：${region} • 成交量：${fmtNum(vol)}`;
-
-      const quality=document.createElement("span"); 
-      quality.className=`tag ${qualityTag.class}`; 
-      quality.innerText=qualityTag.text;
-
-      left.appendChild(headerDiv);
-      left.appendChild(priceDiv);
-      left.appendChild(prevDiv);
-      left.appendChild(rangeDiv);
-      left.appendChild(metaDiv);
-      left.appendChild(quality);
-
-      const chartDiv=document.createElement("div"); chartDiv.className="chart"; chartDiv.id=idFor(k);
-      card.appendChild(left); card.appendChild(chartDiv); cardsEl.appendChild(card);
-
-      if(price!=null && low!=null && high!=null){
-        const ch=echarts.init(chartDiv);
-        ch.setOption({
-          grid:{left:8,right:8,top:8,bottom:18},
-          xAxis:{type:'category',data:['低点','当前','高点'],axisLabel:{color:'#cbd5e1',fontSize:12}},
-          yAxis:{type:'value',axisLabel:{color:'#cbd5e1',fontSize:12},splitLine:{lineStyle:{color:'rgba(255,255,255,0.03)'}}},
-          series:[{
-            type:'line',
-            data:[low,price,high],
-            symbol:'circle',
-            symbolSize:8,
-            lineStyle:{color:'rgba(74,144,226,0.95)', width:2},
-            itemStyle:{color:'rgba(74,144,226,0.95)'},
-            areaStyle:{color:'rgba(74,144,226,0.12)'},
-            tooltip: {
-              trigger: 'item',
-              formatter: function(params) {
-                const labels = ['52周低点', '当前价格', '52周高点'];
-                return `${labels[params.dataIndex]}: ${fmtPrice(params.value)} ${cur}`;
-              }
-            }
-          }],
-          tooltip: {
-            trigger: 'axis',
-            backgroundColor: 'rgba(15,23,36,0.95)',
-            borderColor: 'rgba(74,144,226,0.5)',
-            textStyle: { color: '#e6eef8' },
-            axisPointer: {
-              type: 'shadow',
-              shadowStyle: { color: 'rgba(74,144,226,0.1)' }
-            }
-          }
-        });
-        cardCharts.push(ch);
-      }
-    }
-
-    window.addEventListener('resize', function() {
-      cardCharts.forEach(chart => {
-        try { chart.resize(); } catch(e) {}
-      });
-    });
-  }
-
-  await loadAndRender();
-  setInterval(loadAndRender,60000);
-})();
-</script>
-</body>
-</html>
+{
+  "沪深300": {
+    "current_price": 4490.45,
+    "previous_close": 4523.71,
+    "change_percent": -0.74,
+    "fifty_two_week_high": 4548.89,
+    "fifty_two_week_low": 3145.79,
+    "volume": 328485528,
+    "currency": "CNY",
+    "data_quality": "good",
+    "region": "中国"
+  },
+  "上证指数": {
+    "current_price": 3858.13,
+    "previous_close": 3875.53,
+    "change_percent": -0.45,
+    "fifty_two_week_high": 3888.6,
+    "fifty_two_week_low": 2689.7,
+    "volume": 3247439268,
+    "currency": "CNY",
+    "data_quality": "good",
+    "region": "中国"
+  },
+  "深证成指": {
+    "current_price": 12553.84,
+    "previous_close": 12828.95,
+    "change_percent": -2.14,
+    "fifty_two_week_high": 12857.16,
+    "fifty_two_week_low": 7908.52,
+    "volume": 3672136512,
+    "currency": "CNY",
+    "data_quality": "good",
+    "region": "中国"
+  },
+  "恒生指数": {
+    "current_price": 25496.55,
+    "previous_close": 25617.42,
+    "change_percent": -0.47,
+    "fifty_two_week_high": 25918.86,
+    "fifty_two_week_low": 16964.28,
+    "volume": null,
+    "currency": "HKD",
+    "data_quality": "good",
+    "region": "香港"
+  },
+  "标普500": {
+    "current_price": 6460.26,
+    "previous_close": 6501.86,
+    "change_percent": -0.64,
+    "fifty_two_week_high": 6508.23,
+    "fifty_two_week_low": 4835.04,
+    "volume": 4234840000,
+    "currency": "USD",
+    "data_quality": "good",
+    "region": "美国"
+  },
+  "纳斯达克": {
+    "current_price": 21455.55,
+    "previous_close": 21705.16,
+    "change_percent": -1.15,
+    "fifty_two_week_high": 21803.75,
+    "fifty_two_week_low": 14784.03,
+    "volume": 7715430000,
+    "currency": "USD",
+    "data_quality": "good",
+    "region": "美国"
+  },
+  "道琼斯": {
+    "current_price": 45544.88,
+    "previous_close": 45636.9,
+    "change_percent": -0.2,
+    "fifty_two_week_high": 45757.84,
+    "fifty_two_week_low": 36611.78,
+    "volume": 494870000,
+    "currency": "USD",
+    "data_quality": "good",
+    "region": "美国"
+  },
+  "日经225": {
+    "current_price": 42310.49,
+    "previous_close": 42188.79,
+    "change_percent": 0.29,
+    "fifty_two_week_high": 43876.42,
+    "fifty_two_week_low": 30792.74,
+    "volume": null,
+    "currency": "JPY",
+    "data_quality": "good",
+    "region": "日本"
+  },
+  "台湾加权": {
+    "current_price": 24016.78,
+    "previous_close": 24071.73,
+    "change_percent": -0.23,
+    "fifty_two_week_high": 24570.15,
+    "fifty_two_week_low": 17306.97,
+    "volume": null,
+    "currency": "TWD",
+    "data_quality": "good",
+    "region": "台湾"
+  },
+  "韩国KOSPI": {
+    "current_price": 3172.35,
+    "previous_close": 3142.93,
+    "change_percent": 0.94,
+    "fifty_two_week_high": 3288.26,
+    "fifty_two_week_low": 2284.72,
+    "volume": 304122,
+    "currency": "KRW",
+    "data_quality": "good",
+    "region": "韩国"
+  },
+  "印度SENSEX": {
+    "current_price": 80126.69,
+    "previous_close": 80364.49,
+    "change_percent": -0.3,
+    "fifty_two_week_high": 85978.25,
+    "fifty_two_week_low": 71425.01,
+    "volume": null,
+    "currency": "INR",
+    "data_quality": "good",
+    "region": "印度"
+  },
+  "德国DAX": {
+    "current_price": 23785.17,
+    "previous_close": 24037.33,
+    "change_percent": -1.05,
+    "fifty_two_week_high": 24639.1,
+    "fifty_two_week_low": 18208.84,
+    "volume": null,
+    "currency": "EUR",
+    "data_quality": "good",
+    "region": "欧洲"
+  },
+  "英国富时100": {
+    "current_price": 9163.28,
+    "previous_close": 9196.3,
+    "change_percent": -0.36,
+    "fifty_two_week_high": 9357.5,
+    "fifty_two_week_low": 7544.8,
+    "volume": null,
+    "currency": "GBP",
+    "data_quality": "good",
+    "region": "欧洲"
+  },
+  "法国CAC40": {
+    "current_price": 7706.41,
+    "previous_close": 7707.9,
+    "change_percent": -0.02,
+    "fifty_two_week_high": 8257.88,
+    "fifty_two_week_low": 6763.76,
+    "volume": null,
+    "currency": "EUR",
+    "data_quality": "good",
+    "region": "欧洲"
+  },
+  "澳大利亚ASX200": {
+    "current_price": 8900.6,
+    "previous_close": 8927.7,
+    "change_percent": -0.3,
+    "fifty_two_week_high": 9054.5,
+    "fifty_two_week_low": 7169.2,
+    "volume": null,
+    "currency": "AUD",
+    "data_quality": "good",
+    "region": "澳大利亚"
+  },
+  "last_updated": "2025-09-02T08:49:04.943076"
+}
