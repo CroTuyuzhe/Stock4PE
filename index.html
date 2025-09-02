@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8" />
@@ -45,14 +45,14 @@
       gap: 20px;
       padding: 20px;
       justify-content: center;
-      max-width: 1600px;
+      max-width: 1600px; /* 增加最大宽度以容纳更宽的卡片 */
       margin: 0 auto;
     }
 
     /* 卡片区域 */
     #cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); /* 增加最小宽度 */
       gap: 20px;
       width: 100%;
     }
@@ -109,11 +109,10 @@
     .tag-error { color: var(--tag-error); }
     .tag-warning { color: var(--tag-warning); }
 
-    /* 图表区 */
+    /* 图表区 - 增加高度以适应更宽的布局 */
     .chart { 
       width: 100%; 
-      height: 160px;
-      cursor: pointer;
+      height: 160px; /* 增加高度 */
     }
 
     #currency-panel {
@@ -150,14 +149,16 @@
         flex-direction: row;
       }
       
+      /* 左侧信息区保持原有宽度 */
       .card .left {
-        flex: 0 0 180px;
+        flex: 0 0 180px; /* 固定宽度 */
         width: auto;
         padding-right: 16px;
       }
       
+      /* 图表区域占用剩余空间的2倍比例 */
       .chart {
-        flex: 2;
+        flex: 2; /* 使图表区域宽度为左侧信息区的2倍 */
       }
     }
 
@@ -167,12 +168,14 @@
         grid-template-columns: 1fr 420px;
       }
       
+      /* 左侧信息区保持原有宽度 */
       .card .left {
-        flex: 0 0 200px;
+        flex: 0 0 200px; /* 固定宽度 */
       }
       
+      /* 图表区域占用剩余空间的2倍比例 */
       .chart {
-        flex: 2;
+        flex: 2; /* 使图表区域宽度为左侧信息区的2倍 */
       }
     }
 
@@ -240,79 +243,29 @@
   function idFor(key){ return "id_" + key.replace(/\s+/g, "_").replace(/[^\w\-]/g, "_"); }
 
   async function loadAndRender(){
+    // 清除现有图表
     cardCharts.forEach(ch => { try { ch.dispose(); } catch(e){} });
     cardCharts = [];
     Object.values(currencyCharts).forEach(ch => { try { ch.dispose(); } catch(e){} });
     currencyCharts = {};
 
-    // 模拟数据
-    const mockData = {
-      "上证指数": {
-        current_price: 3254.32,
-        previous_close: 3240.12,
-        change_percent: 0.44,
-        fifty_two_week_high: 3420.56,
-        fifty_two_week_low: 2850.32,
-        volume: 4523000000,
-        currency: "CNY",
-        region: "中国",
-        data_quality: "good"
-      },
-      "恒生指数": {
-        current_price: 21560.45,
-        previous_close: 21480.33,
-        change_percent: 0.37,
-        fifty_two_week_high: 26700.45,
-        fifty_two_week_low: 18200.67,
-        volume: 1856000000,
-        currency: "HKD",
-        region: "中国香港",
-        data_quality: "good"
-      },
-      "道琼斯": {
-        current_price: 34256.78,
-        previous_close: 34120.45,
-        change_percent: 0.40,
-        fifty_two_week_high: 36700.45,
-        fifty_two_week_low: 28600.12,
-        volume: 3520000000,
-        currency: "USD",
-        region: "美国",
-        data_quality: "good"
-      },
-      "纳斯达克": {
-        current_price: 13780.34,
-        previous_close: 13650.78,
-        change_percent: 0.95,
-        fifty_two_week_high: 16200.56,
-        fifty_two_week_low: 10200.34,
-        volume: 4850000000,
-        currency: "USD",
-        region: "美国",
-        data_quality: "good"
-      },
-      "日经225": {
-        current_price: 28560.45,
-        previous_close: 28340.23,
-        change_percent: 0.78,
-        fifty_two_week_high: 30700.34,
-        fifty_two_week_low: 24600.78,
-        volume: 2850000000,
-        currency: "JPY",
-        region: "日本",
-        data_quality: "good"
-      },
-      "last_updated": "2023-07-15T10:30:00Z"
-    };
+    let data;
+    try {
+      const res = await fetch("data.json?ts=" + Date.now(), {cache:"no-store"});
+      data = await res.json();
+    } catch (err) {
+      console.error("读取失败", err);
+      return;
+    }
 
-    let data = mockData;
-
+    // 更新最后更新时间
     const lu = data.last_updated || data.lastUpdated;
     if (lu) {
       const dt = new Date(lu);
       document.getElementById("last-updated").textContent = "⏰ 最近数据更新（伦敦时间）：" + dt.toLocaleString("zh-CN",{timeZone:"Asia/Shanghai"});
     }
 
+    // 排序指数列表
     let keys = Object.keys(data).filter(k=>!["last_updated","lastUpdated"].includes(k));
     keys.sort((a,b)=>{
       const pa = (data[a].currency==="CNY"||data[a].currency==="HKD")?0:1;
@@ -324,6 +277,7 @@
     const cardsEl = document.getElementById("cards");
     cardsEl.innerHTML = "";
 
+    // 生成指数卡片
     for(const k of keys){
       const it = data[k]||{};
       const region = normalizeRegion(k,it.region);
@@ -337,27 +291,35 @@
       const dataQuality = it.data_quality || "unknown";
       const qualityTag = getQualityTag(dataQuality);
 
+      // 创建卡片元素
       const card=document.createElement("div"); card.className="card";
       const left=document.createElement("div"); left.className="left";
 
+      // 指数标题和涨跌幅
       const headerDiv=document.createElement("div"); headerDiv.className="index-title";
       const nameDiv=document.createElement("div"); nameDiv.className="index-name"; nameDiv.innerText=k;
       const changeDiv=document.createElement("div"); changeDiv.className="change"; changeDiv.innerText=fmtPct(chg);
       changeDiv.classList.add((chg!=null && chg>=0)?"up":"down");
       headerDiv.appendChild(nameDiv); headerDiv.appendChild(changeDiv);
 
+      // 价格信息
       const priceDiv=document.createElement("div"); priceDiv.className="price"; priceDiv.innerText=(price==null?"—":fmtPrice(price)+" "+cur);
 
+      // 前收盘价
       const prevDiv=document.createElement("div"); prevDiv.className="meta"; prevDiv.innerText="前收盘："+(prev==null?"—":fmtPrice(prev));
 
+      // 52周区间
       const rangeDiv=document.createElement("div"); rangeDiv.className="range"; rangeDiv.innerText=`52 周：${fmtPrice(low)} — ${fmtPrice(high)}`;
 
+      // 其他元数据
       const metaDiv=document.createElement("div"); metaDiv.className="meta"; metaDiv.innerHTML=`地区：${region} • 成交量：${fmtNum(vol)}`;
 
+      // 数据质量标签
       const quality=document.createElement("span"); 
       quality.className=`tag ${qualityTag.class}`; 
       quality.innerText=qualityTag.text;
 
+      // 组装左侧信息区
       left.appendChild(headerDiv);
       left.appendChild(priceDiv);
       left.appendChild(prevDiv);
@@ -365,9 +327,11 @@
       left.appendChild(metaDiv);
       left.appendChild(quality);
 
+      // 创建图表区域
       const chartDiv=document.createElement("div"); chartDiv.className="chart"; chartDiv.id=idFor(k);
       card.appendChild(left); card.appendChild(chartDiv); cardsEl.appendChild(card);
 
+      // 初始化图表
       if(price!=null && low!=null && high!=null){
         const ch=echarts.init(chartDiv);
         
@@ -438,6 +402,7 @@
       }
     }
 
+    // 窗口大小变化时重绘图表
     window.addEventListener('resize', function() {
       cardCharts.forEach(chart => {
         try { chart.resize(); } catch(e) {}
@@ -445,6 +410,7 @@
     });
   }
 
+  // 初始加载并定时刷新
   await loadAndRender();
   setInterval(loadAndRender,60000);
 })();
