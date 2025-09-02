@@ -16,6 +16,9 @@
       --down: #29a329; /* 跌 - 绿 */
       --tag-bg: #1c2536;
       --tag-text: #4a90e2;
+      --tag-good: #29a329;
+      --tag-error: #ff4d4f;
+      --tag-warning: #ffa940;
     }
     *{box-sizing:border-box}
     body{
@@ -50,8 +53,9 @@
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
       border: 1px solid rgba(255,255,255,0.03);
       border-radius: 10px;
-      padding: 14px;
+      padding: 16px;
       align-items:stretch;
+      min-height: 160px; /* 确保卡片有足够高度 */
     }
     .card .left {
       width: 320px;
@@ -65,6 +69,7 @@
       display:flex;
       align-items:center;
       justify-content:space-between;
+      margin-bottom: 8px;
     }
     .index-name {
       font-size:16px;
@@ -74,21 +79,27 @@
     .change { font-weight:700; font-size:13px; }
     .up { color: var(--up); }
     .down { color: var(--down); }
-    .meta { color: var(--muted); font-size:13px; margin-top:6px; }
+    .meta { color: var(--muted); font-size:13px; margin-top:4px; }
     .price { font-size:20px; font-weight:800; margin-top:8px; }
     .range { font-size:13px; color: var(--muted); margin-top:8px; }
-    .volume { font-size:12px; color: var(--muted); margin-top:6px; }
+    .volume { font-size:12px; color: var(--muted); margin-top:4px; }
     .tag {
       display:inline-block;
-      padding:2px 8px;
-      margin-top:6px;
+      padding:4px 10px;
+      margin-top:8px;
       font-size:12px;
       border-radius:6px;
       background: var(--tag-bg);
-      color: var(--tag-text);
     }
+    .tag-good { color: var(--tag-good); }
+    .tag-error { color: var(--tag-error); }
+    .tag-warning { color: var(--tag-warning); }
 
-    .chart { flex:1; min-width:160px; height:120px; }
+    .chart { 
+      flex:1; 
+      min-width:160px; 
+      height:140px; /* 增加图表高度 */
+    }
 
     #currency-panel {
       display:flex;
@@ -133,7 +144,7 @@
   </main>
 
   <footer>
-    数据来源：由后端生成的 <code>Powered By Eric</code>。页面每 60 秒自动刷新。
+    数据来源：由后端生成的 <code>data.json</code>。页面每 60 秒自动刷新。
   </footer>
 
 <script>
@@ -148,6 +159,15 @@
     if (/恒生|HSI/i.test(name)) return "中国香港";
     if (/台湾|TWII|Taiwan/i.test(name)) return "中国台湾";
     return regionField || "未知";
+  }
+
+  function getQualityTag(dataQuality) {
+    switch(dataQuality) {
+      case 'good': return { text: '校验数据质量：优秀', class: 'tag-good' };
+      case 'error': return { text: '校验数据质量：错误', class: 'tag-error' };
+      case 'warning': return { text: '校验数据质量：警告', class: 'tag-warning' };
+      default: return { text: '校验数据质量：未知', class: '' };
+    }
   }
 
   function idFor(key){ return "id_" + key.replace(/\s+/g, "_").replace(/[^\w\-]/g, "_"); }
@@ -194,6 +214,8 @@
       const low = it.fifty_two_week_low??null;
       const vol = it.volume??null;
       const cur = it.currency??"—";
+      const dataQuality = it.data_quality || "unknown";
+      const qualityTag = getQualityTag(dataQuality);
 
       const card=document.createElement("div"); card.className="card";
       const left=document.createElement("div"); left.className="left";
@@ -212,7 +234,9 @@
 
       const metaDiv=document.createElement("div"); metaDiv.className="meta"; metaDiv.innerHTML=`地区：${region} • 成交量：${fmtNum(vol)}`;
 
-      const quality=document.createElement("span"); quality.className="tag"; quality.innerText=it.data_quality||"未知";
+      const quality=document.createElement("span"); 
+      quality.className=`tag ${qualityTag.class}`; 
+      quality.innerText=qualityTag.text;
 
       left.appendChild(headerDiv);
       left.appendChild(priceDiv);
@@ -230,13 +254,45 @@
           grid:{left:8,right:8,top:8,bottom:18},
           xAxis:{type:'category',data:['低点','当前','高点'],axisLabel:{color:'#cbd5e1',fontSize:12}},
           yAxis:{type:'value',axisLabel:{color:'#cbd5e1',fontSize:12},splitLine:{lineStyle:{color:'rgba(255,255,255,0.03)'}}},
-          series:[{type:'line',data:[low,price,high],symbol:'circle',symbolSize:6,lineStyle:{color:varColor()},itemStyle:{color:varColor()},areaStyle:{color:'rgba(74,144,226,0.12)'}}]
+          series:[{
+            type:'line',
+            data:[low,price,high],
+            symbol:'circle',
+            symbolSize:8,
+            lineStyle:{color:'rgba(74,144,226,0.95)', width:2},
+            itemStyle:{color:'rgba(74,144,226,0.95)'},
+            areaStyle:{color:'rgba(74,144,226,0.12)'},
+            // 启用tooltip
+            tooltip: {
+              trigger: 'item',
+              formatter: function(params) {
+                const labels = ['52周低点', '当前价格', '52周高点'];
+                return `${labels[params.dataIndex]}: ${fmtPrice(params.value)} ${cur}`;
+              }
+            }
+          }],
+          // 全局tooltip配置
+          tooltip: {
+            trigger: 'axis',
+            backgroundColor: 'rgba(15,23,36,0.95)',
+            borderColor: 'rgba(74,144,226,0.5)',
+            textStyle: { color: '#e6eef8' },
+            axisPointer: {
+              type: 'shadow',
+              shadowStyle: { color: 'rgba(74,144,226,0.1)' }
+            }
+          }
         });
         cardCharts.push(ch);
       }
     }
 
-    function varColor(){return 'rgba(74,144,226,0.95)';}
+    // 添加窗口调整大小时的重绘
+    window.addEventListener('resize', function() {
+      cardCharts.forEach(chart => {
+        try { chart.resize(); } catch(e) {}
+      });
+    });
   }
 
   await loadAndRender();
