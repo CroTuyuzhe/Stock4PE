@@ -52,16 +52,18 @@
       }
     }
 
-    /* 卡片区域 */
-    #cards { 
+    /* 卡片区域居中自适应 */
+    #cards {
       display: grid;
-      grid-template-columns: repeat(2, 1fr); /* 一行两张卡片 */
+      grid-template-columns: repeat(2, 1fr);
       gap: 14px;
+      max-width: 1200px; /* 最大宽度 */
+      margin: 0 auto; /* 居中 */
     }
 
     @media (max-width: 900px) {
       #cards {
-        grid-template-columns: 1fr; /* 小屏幕单列 */
+        grid-template-columns: 1fr;
       }
     }
 
@@ -348,14 +350,10 @@
       }
     }
 
-    setTimeout(() => {
-      cardCharts.forEach(chart => { try { chart.resize(); } catch(e) {} });
-    }, 100);
+    setTimeout(() => { cardCharts.forEach(chart => { try { chart.resize(); } catch(e) {} }); }, 100);
   }
 
-  window.addEventListener('resize', function() {
-    cardCharts.forEach(chart => { try { chart.resize(); } catch(e) {} });
-  });
+  window.addEventListener('resize', function() { cardCharts.forEach(chart => { try { chart.resize(); } catch(e) {} }); });
 
   await loadAndRender();
   setInterval(loadAndRender,60000);
@@ -363,4 +361,3 @@
 </script>
 </body>
 </html>
-
