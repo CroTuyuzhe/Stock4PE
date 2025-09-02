@@ -2,40 +2,33 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>全球主要指数监控</title>
+  <title>全球主要指数展示</title>
   <script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
   <style>
     body {
-      font-family: "Microsoft YaHei", sans-serif;
+      font-family: Arial, sans-serif;
       background-color: #f5f7fa;
       margin: 0;
       padding: 20px;
-      color: #333;
     }
     h1 {
       text-align: center;
       margin-bottom: 30px;
     }
     .container {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
       gap: 20px;
-      max-width: 1200px;
-      margin: auto;
     }
     .card {
       display: flex;
-      justify-content: space-between;
-      background: #fff;
+      background: white;
       border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
       padding: 20px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
     }
     .info {
       flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
       padding-right: 20px;
     }
     .info h2 {
@@ -43,84 +36,103 @@
       font-size: 20px;
     }
     .info p {
-      margin: 6px 0;
-      font-size: 14px;
+      margin: 8px 0;
+      color: #333;
     }
     .chart {
-      flex: 2;
+      flex: 1.2;
       height: 200px;
+    }
+    .last-updated {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 14px;
+      color: #666;
     }
   </style>
 </head>
 <body>
-  <h1>📊 全球主要指数监控</h1>
-  <div class="container" id="dashboard"></div>
+  <h1>全球主要指数行情</h1>
+  <div class="container" id="index-container"></div>
+  <div class="last-updated" id="last-updated"></div>
 
   <script>
+    const regionMap = {
+      "CSI300": "中国大陆",
+      "SP500": "美国",
+      "Nasdaq": "美国",
+      "HSI": "中国香港",
+      "TWII": "中国台湾"
+    };
+
     async function loadData() {
-      const res = await fetch("data.json"); // 读取本地生成的 JSON
-      const data = await res.json();
-      const container = document.getElementById("dashboard");
-      container.innerHTML = "";
+      try {
+        const response = await fetch('data.json');
+        const data = await response.json();
 
-      const regionMap = {
-        "CSI300": "中国大陆",
-        "SP500": "美国",
-        "Nasdaq": "美国",
-        "HSI": "中国香港",
-        "TWII": "中国台湾"
-      };
+        const container = document.getElementById('index-container');
+        container.innerHTML = "";
 
-      Object.entries(data).forEach(([key, val]) => {
-        if (key === "last_updated") return;
+        Object.keys(data).forEach(key => {
+          if (key === "last_updated") return;
 
-        // 卡片元素
-        const card = document.createElement("div");
-        card.className = "card";
+          const item = data[key];
+          const region = regionMap[key] || "未知";
+          const pe = item.pe ? item.pe.toFixed(2) : "暂无数据";
 
-        // 左侧信息
-        const info = document.createElement("div");
-        info.className = "info";
-        info.innerHTML = `
-          <h2>${key}</h2>
-          <p>地区：${regionMap[key] || "未知"}</p>
-          <p>现价：${val.price} ${val.currency}</p>
-          <p>PE：${val.pe ?? "暂无数据"}</p>
-          <p>52周区间：${val.year_low} ~ ${val.year_high}</p>
-        `;
+          // 创建卡片
+          const card = document.createElement('div');
+          card.className = 'card';
 
-        // 右侧图表
-        const chartDiv = document.createElement("div");
-        chartDiv.className = "chart";
-        chartDiv.id = "chart-" + key;
+          // 左侧信息
+          const info = document.createElement('div');
+          info.className = 'info';
+          info.innerHTML = `
+            <h2>${key}</h2>
+            <p>地区：${region}</p>
+            <p>现价：${item.price} ${item.currency}</p>
+            <p>PE：${pe}</p>
+            <p>52周区间：${item.year_low} ~ ${item.year_high}</p>
+          `;
+          card.appendChild(info);
 
-        card.appendChild(info);
-        card.appendChild(chartDiv);
-        container.appendChild(card);
+          // 右侧图表
+          const chartDiv = document.createElement('div');
+          chartDiv.className = 'chart';
+          card.appendChild(chartDiv);
 
-        // ECharts 绘制
-        const chart = echarts.init(chartDiv);
-        chart.setOption({
-          tooltip: { trigger: "axis" },
-          xAxis: {
-            type: "category",
-            data: ["52周低点", "现价", "52周高点"],
-          },
-          yAxis: { type: "value" },
-          series: [
-            {
-              name: key,
-              type: "line",
+          container.appendChild(card);
+
+          // 绘制折线图
+          const chart = echarts.init(chartDiv);
+          chart.setOption({
+            xAxis: {
+              type: 'category',
+              data: ['52周最低', '现价', '52周最高'],
+              boundaryGap: false
+            },
+            yAxis: {
+              type: 'value'
+            },
+            series: [{
+              data: [item.year_low, item.price, item.year_high],
+              type: 'line',
               smooth: true,
-              data: [val.year_low, val.price, val.year_high],
-              lineStyle: { color: "#5470c6" },
-              itemStyle: { color: "#91cc75" }
+              areaStyle: {}
+            }],
+            tooltip: {
+              trigger: 'axis'
             }
-          ]
+          });
         });
-      });
-    }
 
+        // 更新时间
+        document.getElementById('last-updated').innerText =
+          "数据更新时间：" + data.last_updated;
+      } catch (error) {
+        console.error("读取 data.json 出错:", error);
+      }
+    }
 
     loadData();
   </script>
