@@ -44,9 +44,20 @@
       grid-template-columns: 1fr 420px; /* 左大 右侧为币种概览列 */
       gap: 20px;
       padding: 20px 28px;
+      justify-content: center;
     }
 
-    #cards { display:flex; flex-direction:column; gap:14px; }
+    /* 修改后的卡片布局 */
+    #cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(380px, 1fr));
+      gap: 20px;
+      justify-content: center;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
     .card {
       display:flex;
       gap:16px;
@@ -127,6 +138,7 @@
 
     @media (max-width: 1100px) {
       main { grid-template-columns: 1fr; }
+      #cards { grid-template-columns: 1fr; }
       .card .left { width: 200px; min-width: 140px; }
       .chart { height:140px; }
     }
@@ -262,7 +274,6 @@
             lineStyle:{color:'rgba(74,144,226,0.95)', width:2},
             itemStyle:{color:'rgba(74,144,226,0.95)'},
             areaStyle:{color:'rgba(74,144,226,0.12)'},
-            // 启用tooltip
             tooltip: {
               trigger: 'item',
               formatter: function(params) {
@@ -271,7 +282,6 @@
               }
             }
           }],
-          // 全局tooltip配置
           tooltip: {
             trigger: 'axis',
             backgroundColor: 'rgba(15,23,36,0.95)',
@@ -287,7 +297,6 @@
       }
     }
 
-    // 添加窗口调整大小时的重绘
     window.addEventListener('resize', function() {
       cardCharts.forEach(chart => {
         try { chart.resize(); } catch(e) {}
