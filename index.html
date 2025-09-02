@@ -47,35 +47,41 @@
       justify-content: center;
     }
 
-    /* 修改后的卡片布局 */
+    /* 卡片区域 */
     #cards {
       display: grid;
-      grid-template-columns: repeat(2, minmax(380px, 1fr));
+      grid-template-columns: repeat(2, minmax(500px, 1fr));
       gap: 20px;
       justify-content: center;
       width: 100%;
-      max-width: 1200px;
+      max-width: 1300px;
       margin: 0 auto;
     }
 
+    /* 卡片容器 */
     .card {
-      display:flex;
-      gap:16px;
+      display: flex;
+      gap: 16px;
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
       border: 1px solid rgba(255,255,255,0.03);
       border-radius: 10px;
       padding: 16px;
-      align-items:stretch;
-      min-height: 160px; /* 确保卡片有足够高度 */
+      align-items: stretch;
+      min-height: 160px;
+      min-width: 500px;   /* 保证内容区和图表都能放下 */
+      overflow: hidden;   /* 防止内容溢出 */
     }
+
+    /* 左侧信息区 */
     .card .left {
-      width: 320px;
-      min-width: 240px;
-      padding-right:8px;
+      flex: 0 0 280px;    /* 固定宽度 */
+      min-width: 260px;
+      padding-right: 8px;
       display:flex;
       flex-direction:column;
       justify-content:space-between;
     }
+
     .index-title {
       display:flex;
       align-items:center;
@@ -106,10 +112,11 @@
     .tag-error { color: var(--tag-error); }
     .tag-warning { color: var(--tag-warning); }
 
+    /* 图表区 */
     .chart { 
-      flex:1; 
-      min-width:160px; 
-      height:140px; /* 增加图表高度 */
+      flex: 1; 
+      min-width: 200px; 
+      height: 140px; 
     }
 
     #currency-panel {
@@ -139,7 +146,8 @@
     @media (max-width: 1100px) {
       main { grid-template-columns: 1fr; }
       #cards { grid-template-columns: 1fr; }
-      .card .left { width: 200px; min-width: 140px; }
+      .card { min-width: auto; }
+      .card .left { flex: 0 0 200px; min-width: 160px; }
       .chart { height:140px; }
     }
   </style>
