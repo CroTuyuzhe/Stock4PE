@@ -41,26 +41,59 @@
 
     main{
       display:grid;
-      grid-template-columns: 1fr 420px; /* 左大 右侧为币种概览列 */
+      grid-template-columns: 1fr; /* 默认单列布局 */
       gap: 20px;
       padding: 20px 28px;
     }
 
-    #cards { display:flex; flex-direction:column; gap:14px; }
+    /* 宽屏幕下的布局 - 两列 */
+    @media (min-width: 1200px) {
+      main {
+        grid-template-columns: 1fr 420px; /* 左大 右侧为币种概览列 */
+      }
+    }
+
+    #cards { 
+      display:grid;
+      grid-template-columns: 1fr; /* 默认单列 */
+      gap: 14px;
+    }
+
+    /* 中等屏幕以上 - 两列卡片 */
+    @media (min-width: 900px) {
+      #cards {
+        grid-template-columns: repeat(2, 1fr); /* 两列布局 */
+      }
+    }
+
+    /* 超大屏幕 - 三列卡片 */
+    @media (min-width: 1600px) {
+      #cards {
+        grid-template-columns: repeat(3, 1fr); /* 三列布局 */
+      }
+    }
+
     .card {
       display:flex;
+      flex-direction: column; /* 默认垂直排列 */
       gap:16px;
       background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
       border: 1px solid rgba(255,255,255,0.03);
       border-radius: 10px;
       padding: 16px;
-      align-items:stretch;
-      min-height: 160px; /* 确保卡片有足够高度 */
+      min-height: 160px;
     }
+
+    /* 中等屏幕以上 - 卡片内部水平排列 */
+    @media (min-width: 768px) {
+      .card {
+        flex-direction: row; /* 水平排列 */
+      }
+    }
+
     .card .left {
-      width: 320px;
-      min-width: 240px;
-      padding-right:8px;
+      flex: 1;
+      min-width: 0; /* 防止内容溢出 */
       display:flex;
       flex-direction:column;
       justify-content:space-between;
@@ -75,6 +108,9 @@
       font-size:16px;
       font-weight:700;
       letter-spacing:0.2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     .change { font-weight:700; font-size:13px; }
     .up { color: var(--up); }
@@ -96,9 +132,13 @@
     .tag-warning { color: var(--tag-warning); }
 
     .chart { 
-      flex:1; 
-      min-width:160px; 
-      height:140px; /* 增加图表高度 */
+      flex: 1;
+      min-height: 140px;
+      position: relative;
+    }
+    .chart-container {
+      width: 100%;
+      height: 100%;
     }
 
     #currency-panel {
@@ -125,17 +165,36 @@
       text-align:center;
     }
 
-    @media (max-width: 1100px) {
-      main { grid-template-columns: 1fr; }
-      .card .left { width: 200px; min-width: 140px; }
-      .chart { height:140px; }
+    /* 小屏幕调整 */
+    @media (max-width: 767px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      
+      main {
+        padding: 15px;
+      }
+      
+      .card .left {
+        width: 100%;
+      }
+      
+      .index-name {
+        font-size: 14px;
+      }
+      
+      .price {
+        font-size: 18px;
+      }
     }
   </style>
 </head>
 <body>
   <header>
     <h1>全球主要指数 · 实时监控（含 52 周区间）</h1>
-    <div id="last-updated">⏰ 最近数据更新（伦敦时间）：--</div>
+    <div id="last-updated">⏰ 最近更新（伦敦时间）：--</div>
   </header>
 
   <main>
@@ -163,7 +222,7 @@
 
   function getQualityTag(dataQuality) {
     switch(dataQuality) {
-      case 'good': return { text: '校验数据质量：优秀', class: 'tag-good' };
+      case 'good': return { text: '校验数据质量：良好', class: 'tag-good' };
       case 'error': return { text: '校验数据质量：错误', class: 'tag-error' };
       case 'warning': return { text: '校验数据质量：警告', class: 'tag-warning' };
       default: return { text: '校验数据质量：未知', class: '' };
@@ -171,6 +230,93 @@
   }
 
   function idFor(key){ return "id_" + key.replace(/\s+/g, "_").replace(/[^\w\-]/g, "_"); }
+
+  function createChartOptions(low, price, high, cur) {
+    return {
+      grid: {
+        left: '3%',
+        right: '3%',
+        top: '10%',
+        bottom: '20%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: ['52周低点', '当前价格', '52周高点'],
+        axisLabel: {
+          color: '#cbd5e1',
+          fontSize: 11,
+          interval: 0,
+          rotate: 0,
+          margin: 8,
+          formatter: function(value) {
+            if (value === '当前价格') return '当前';
+            if (value === '52周低点') return '低点';
+            if (value === '52周高点') return '高点';
+            return value;
+          }
+        },
+        axisTick: {
+          show: false
+        },
+        axisLine: {
+          lineStyle: {
+            color: 'rgba(255,255,255,0.1)'
+          }
+        }
+      },
+      yAxis: {
+        type: 'value',
+        axisLabel: {
+          color: '#cbd5e1',
+          fontSize: 10,
+          inside: false
+        },
+        splitLine: {
+          lineStyle: {
+            color: 'rgba(255,255,255,0.03)'
+          }
+        },
+        min: function(value) {
+          return Math.max(0, value.min - value.min * 0.1);
+        }
+      },
+      series: [{
+        type: 'line',
+        data: [low, price, high],
+        symbol: 'circle',
+        symbolSize: 8,
+        lineStyle: {
+          color: 'rgba(74,144,226,0.95)',
+          width: 2
+        },
+        itemStyle: {
+          color: 'rgba(74,144,226,0.95)'
+        },
+        areaStyle: {
+          color: 'rgba(74,144,226,0.12)'
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: function(params) {
+            const labels = ['52周低点', '当前价格', '52周高点'];
+            return `${labels[params.dataIndex]}: ${fmtPrice(params.value)} ${cur}`;
+          }
+        }
+      }],
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: 'rgba(15,23,36,0.95)',
+        borderColor: 'rgba(74,144,226,0.5)',
+        textStyle: { color: '#e6eef8' },
+        axisPointer: {
+          type: 'shadow',
+          shadowStyle: { color: 'rgba(74,144,226,0.1)' }
+        }
+      },
+      animation: false
+    };
+  }
 
   async function loadAndRender(){
     cardCharts.forEach(ch => { try { ch.dispose(); } catch(e){} });
@@ -190,7 +336,7 @@
     const lu = data.last_updated || data.lastUpdated;
     if (lu) {
       const dt = new Date(lu);
-      document.getElementById("last-updated").textContent = "⏰ 最近数据更新（伦敦时间）：" + dt.toLocaleString("zh-CN",{timeZone:"Asia/Shanghai"});
+      document.getElementById("last-updated").textContent = "⏰ 最近更新（伦敦时间）：" + dt.toLocaleString("zh-CN",{timeZone:"Asia/Shanghai"});
     }
 
     let keys = Object.keys(data).filter(k=>!["last_updated","lastUpdated"].includes(k));
@@ -245,55 +391,34 @@
       left.appendChild(metaDiv);
       left.appendChild(quality);
 
+      const chartContainer=document.createElement("div"); chartContainer.className="chart-container";
       const chartDiv=document.createElement("div"); chartDiv.className="chart"; chartDiv.id=idFor(k);
-      card.appendChild(left); card.appendChild(chartDiv); cardsEl.appendChild(card);
+      chartContainer.appendChild(chartDiv);
+      
+      card.appendChild(left); card.appendChild(chartContainer); cardsEl.appendChild(card);
 
       if(price!=null && low!=null && high!=null){
         const ch=echarts.init(chartDiv);
-        ch.setOption({
-          grid:{left:8,right:8,top:8,bottom:18},
-          xAxis:{type:'category',data:['低点','当前','高点'],axisLabel:{color:'#cbd5e1',fontSize:12}},
-          yAxis:{type:'value',axisLabel:{color:'#cbd5e1',fontSize:12},splitLine:{lineStyle:{color:'rgba(255,255,255,0.03)'}}},
-          series:[{
-            type:'line',
-            data:[low,price,high],
-            symbol:'circle',
-            symbolSize:8,
-            lineStyle:{color:'rgba(74,144,226,0.95)', width:2},
-            itemStyle:{color:'rgba(74,144,226,0.95)'},
-            areaStyle:{color:'rgba(74,144,226,0.12)'},
-            // 启用tooltip
-            tooltip: {
-              trigger: 'item',
-              formatter: function(params) {
-                const labels = ['52周低点', '当前价格', '52周高点'];
-                return `${labels[params.dataIndex]}: ${fmtPrice(params.value)} ${cur}`;
-              }
-            }
-          }],
-          // 全局tooltip配置
-          tooltip: {
-            trigger: 'axis',
-            backgroundColor: 'rgba(15,23,36,0.95)',
-            borderColor: 'rgba(74,144,226,0.5)',
-            textStyle: { color: '#e6eef8' },
-            axisPointer: {
-              type: 'shadow',
-              shadowStyle: { color: 'rgba(74,144,226,0.1)' }
-            }
-          }
-        });
+        const options = createChartOptions(low, price, high, cur);
+        ch.setOption(options);
         cardCharts.push(ch);
       }
     }
 
-    // 添加窗口调整大小时的重绘
-    window.addEventListener('resize', function() {
+    // 延迟重绘以确保布局稳定
+    setTimeout(() => {
       cardCharts.forEach(chart => {
         try { chart.resize(); } catch(e) {}
       });
-    });
+    }, 100);
   }
+
+  // 添加窗口调整大小时的重绘
+  window.addEventListener('resize', function() {
+    cardCharts.forEach(chart => {
+      try { chart.resize(); } catch(e) {}
+    });
+  });
 
   await loadAndRender();
   setInterval(loadAndRender,60000);
