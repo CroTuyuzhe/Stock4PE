@@ -2,125 +2,86 @@ import requests
 import json
 from datetime import datetime
 import time
-from bs4 import BeautifulSoup
 
-def fetch_cpi_data():
+def fetch_economic_data(indicator_code):
     """
-    获取CPI（居民消费价格指数）数据，包含数据验证
+    通过API获取经济指标数据
+    indicator_code: 指标代码，CPI为"A0101"，PPI为"A0102"
     """
     try:
-        url = "https://data.stats.gov.cn/easyquery.htm?cn=A01&zb=A0101&sj=last24"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
-            "Referer": "https://data.stats.gov.cn/"
+        # 使用国家统计局API接口
+        url = "https://data.stats.gov.cn/easyquery.htm"
+        params = {
+            "m": "QueryData",
+            "dbcode": "hgyd",
+            "rowcode": "zb",
+            "colcode": "sj",
+            "wds": '[{"wdcode":"zb","valuecode":"%s"}]' % indicator_code,
+            "dfwds": '[{"wdcode":"sj","valuecode":"last24"}]',
+            "k1": int(time.time() * 1000)  # 时间戳，防止缓存
         }
         
-        response = requests.get(url, headers=headers)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+            "Referer": "https://data.stats.gov.cn/",
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "X-Requested-With": "XMLHttpRequest"
+        }
+        
+        response = requests.get(url, params=params, headers=headers)
         response.encoding = "utf-8"
         
         if response.status_code != 200:
-            print(f"警告: CPI数据请求失败，状态码: {response.status_code}")
-            return create_error_data("CPI", f"请求失败，状态码: {response.status_code}")
+            print(f"警告: 数据请求失败，状态码: {response.status_code}")
+            return create_error_data(indicator_code, f"请求失败，状态码: {response.status_code}")
         
-        soup = BeautifulSoup(response.text, 'html.parser')
-        table = soup.find('table', class_='public_table')
+        try:
+            data = response.json()
+        except json.JSONDecodeError:
+            print(f"警告: 无法解析{indicator_code}数据为JSON")
+            return create_error_data(indicator_code, "数据解析失败")
         
-        if not table:
-            print("警告: 未找到CPI数据表格")
-            return create_error_data("CPI", "未找到数据表格")
+        # 检查返回数据是否有效
+        if "returndata" not in data or "datanodes" not in data["returndata"]:
+            print(f"警告: {indicator_code}返回数据格式异常")
+            return create_error_data(indicator_code, "返回数据格式异常")
         
-        # 解析表格数据
-        rows = table.find_all('tr')[1:]  # 跳过表头
-        if not rows:
-            print("警告: CPI数据表格为空")
-            return create_error_data("CPI", "数据表格为空")
+        # 解析数据
+        result_data = []
+        for node in data["returndata"]["datanodes"]:
+            # 提取时间和数值
+            time_str = node["wds"][1]["valuecode"]
+            value = node["data"]["data"]
+            
+            # 格式化时间
+            if len(time_str) == 6:  # 形如202312表示2023年12月
+                period = f"{time_str[:4]}年{time_str[4:]}月"
+            else:
+                period = time_str
+            
+            # 验证数据
+            if validate_economic_data(value, indicator_code, period):
+                result_data.append({
+                    "period": period,
+                    "value": float(value) if value and value != "-" else None,
+                    "unit": "%"
+                })
         
-        cpi_data = []
-        for row in rows:
-            cols = row.find_all('td')
-            if len(cols) >= 2:
-                period = cols[0].text.strip()
-                value = cols[1].text.strip()
-                
-                # 验证数据
-                if validate_economic_data(value, "CPI", period):
-                    cpi_data.append({
-                        "period": period,
-                        "value": float(value) if value else None,
-                        "unit": "%"
-                    })
+        # 按时间排序（最新的在前）
+        result_data.sort(key=lambda x: x["period"], reverse=True)
         
-        if not cpi_data:
-            print("警告: 未解析到有效CPI数据")
-            return create_error_data("CPI", "未解析到有效数据")
+        if not result_data:
+            print(f"警告: 未解析到有效{indicator_code}数据")
+            return create_error_data(indicator_code, "未解析到有效数据")
         
         return {
-            "data": cpi_data,
+            "data": result_data,
             "data_quality": "good"
         }
         
     except Exception as e:
-        print(f"获取CPI数据失败: {e}")
-        return create_error_data("CPI", str(e))
-
-def fetch_ppi_data():
-    """
-    获取PPI（工业生产者出厂价格指数）数据，包含数据验证
-    """
-    try:
-        url = "https://data.stats.gov.cn/easyquery.htm?cn=A01&zb=A0102&sj=last24"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
-            "Referer": "https://data.stats.gov.cn/"
-        }
-        
-        response = requests.get(url, headers=headers)
-        response.encoding = "utf-8"
-        
-        if response.status_code != 200:
-            print(f"警告: PPI数据请求失败，状态码: {response.status_code}")
-            return create_error_data("PPI", f"请求失败，状态码: {response.status_code}")
-        
-        soup = BeautifulSoup(response.text, 'html.parser')
-        table = soup.find('table', class_='public_table')
-        
-        if not table:
-            print("警告: 未找到PPI数据表格")
-            return create_error_data("PPI", "未找到数据表格")
-        
-        # 解析表格数据
-        rows = table.find_all('tr')[1:]  # 跳过表头
-        if not rows:
-            print("警告: PPI数据表格为空")
-            return create_error_data("PPI", "数据表格为空")
-        
-        ppi_data = []
-        for row in rows:
-            cols = row.find_all('td')
-            if len(cols) >= 2:
-                period = cols[0].text.strip()
-                value = cols[1].text.strip()
-                
-                # 验证数据
-                if validate_economic_data(value, "PPI", period):
-                    ppi_data.append({
-                        "period": period,
-                        "value": float(value) if value else None,
-                        "unit": "%"
-                    })
-        
-        if not ppi_data:
-            print("警告: 未解析到有效PPI数据")
-            return create_error_data("PPI", "未解析到有效数据")
-        
-        return {
-            "data": ppi_data,
-            "data_quality": "good"
-        }
-        
-    except Exception as e:
-        print(f"获取PPI数据失败: {e}")
-        return create_error_data("PPI", str(e))
+        print(f"获取{indicator_code}数据失败: {e}")
+        return create_error_data(indicator_code, str(e))
 
 def validate_economic_data(value, indicator, period):
     """验证经济数据的合理性"""
@@ -141,6 +102,7 @@ def validate_economic_data(value, indicator, period):
 
 def create_error_data(indicator, error_message):
     """创建错误数据记录"""
+    indicator_name = "CPI" if indicator == "A0101" else "PPI"
     return {
         "data": [],
         "data_quality": "error",
@@ -154,12 +116,12 @@ def fetch_economic_indicators():
     results = {}
     
     print("正在获取CPI数据...")
-    cpi_data = fetch_cpi_data()
+    cpi_data = fetch_economic_data("A0101")  # CPI指标代码
     results["CPI"] = cpi_data
     time.sleep(2)  # 避免请求过于频繁
     
     print("正在获取PPI数据...")
-    ppi_data = fetch_ppi_data()
+    ppi_data = fetch_economic_data("A0102")  # PPI指标代码
     results["PPI"] = ppi_data
     
     results["last_updated"] = datetime.utcnow().isoformat()
