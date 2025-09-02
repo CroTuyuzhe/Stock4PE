@@ -37,8 +37,32 @@
       padding:18px 28px;
       border-bottom:1px solid rgba(255,255,255,0.04);
     }
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
     header h1{ margin:0; font-size:18px; font-weight:700; }
     #last-updated { color: var(--muted); font-size:13px; }
+
+    /* 切换视图按钮样式 */
+    .view-switch-button {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: var(--accent);
+      color: var(--text);
+      text-decoration: none;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .view-switch-button:hover {
+      background-color: #3a7bc8;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    }
 
     main{
       display:grid;
@@ -189,6 +213,12 @@
         gap: 10px;
         padding: 12px 16px;
       }
+
+      .header-left {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
       
       main {
         padding: 16px;
@@ -202,7 +232,10 @@
 </head>
 <body>
   <header>
-    <h1>全球主要指数 · 实时监控（含 52 周区间）</h1>
+    <div class="header-left">
+      <h1>全球主要指数 · 实时监控（含 52 周区间）</h1>
+      <a href="goods.html" class="view-switch-button">🟡切换视图</a>
+    </div>
     <div id="last-updated">⏰ 最近数据更新（伦敦时间）：--</div>
   </header>
 
