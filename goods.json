@@ -1,1 +1,13 @@
-
+{
+  "CPI": {
+    "data": [],
+    "data_quality": "error",
+    "error": "未找到数据表格"
+  },
+  "PPI": {
+    "data": [],
+    "data_quality": "error",
+    "error": "未找到数据表格"
+  },
+  "last_updated": "2025-09-02T11:51:23.600099"
+}
