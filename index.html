@@ -52,11 +52,17 @@
       }
     }
 
-    /* 卡片自适应宽度 */
+    /* 卡片区域 */
     #cards { 
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(2, 1fr); /* 一行两张卡片 */
       gap: 14px;
+    }
+
+    @media (max-width: 900px) {
+      #cards {
+        grid-template-columns: 1fr; /* 小屏幕单列 */
+      }
     }
 
     .card {
@@ -70,7 +76,6 @@
       min-height: 160px;
     }
 
-    /* 中等屏幕以上 - 水平布局，左侧固定宽度，右侧自适应 */
     @media (min-width: 768px) {
       .card {
         flex-direction: row;
@@ -155,7 +160,6 @@
       text-align:center;
     }
 
-    /* 小屏幕调整 */
     @media (max-width: 767px) {
       header {
         flex-direction: column;
